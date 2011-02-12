@@ -10,6 +10,13 @@ from .errors import (
     warn_syntax,
 )
 
+from ..structure import (
+    PyhaaTree,
+    PyhaaElementOpenable,
+    Tag,
+    Text,
+)
+
 #log = logging.getLogger(__name__)
 
 
@@ -19,7 +26,10 @@ class PyhaaParsingContext(BasicContext):
         self.indent = 0
         self.tab_width = 0
         self.length = 0
-        #self.tree = PyhaaTree()
+        self.tree = PyhaaTree()
+
+        self.current_opened = 0
+        self.opened_stack = list()
 
     def token_match(self, token, match):
         super().token_match(token, match)
@@ -107,21 +117,41 @@ class PyhaaParsingContext(BasicContext):
                 new_indent = self.indent + eindent,
             )
 
+    def handle_tag_name_start(self, match):
+        self.tree.append(Tag())
+        self.current_opened += 1
+
     def indent_de(self, times=1):
         '''
         Dedented line - times attribute means how many levels do we dedent
         '''
+        to_close = self.current_opened
+        for i in range(times):
+            to_close += self.opened_stack.pop()
+        self.tree.close(to_close)
+        self.current_opened = 0
         self.indent -= times
 
     def indent_in(self):
         '''
         Indented line
         '''
+        if not isinstance(self.tree.current, PyhaaElementOpenable):
+            raise PyhaaSyntaxError(
+                SYNTAX_INFO.UNEXPECTED_INDENT,
+                self,
+            )
+        self.opened_stack.append(self.current_opened)
+        self.current_opened = 0
         self.indent += 1
 
     def indent_re(self):
         '''
         Continuing at the same indent level
         '''
-        pass
+        self.tree.close(self.current_opened)
+        self.current_opened = 0
+
+    def finish(self):
+        self.indent_de(self.indent)
 

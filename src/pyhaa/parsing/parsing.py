@@ -18,7 +18,8 @@ __all__ = (
 
 def parse_readline(readline):
     context = parse(pyhaa_lexer, readline)
-    #return context.tree
+    context.finish()
+    return context.tree
 
 def parse_io(fileobj):
     return parse_readline(fileobj.readline)

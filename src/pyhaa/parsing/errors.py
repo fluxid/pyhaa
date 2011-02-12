@@ -34,6 +34,7 @@ SYNTAX_INFO = DescEnum(
         "Using tabs ({tabs}) and spaces ({spaces}) in one line at once. I'll "
         "try to continue but this may fail."
     )),
+    ('UNEXPECTED_INDENT', 'Unexpected indent'),
     ('UNBALANCED_BRACKETS', 'Unbalanced brackets in Python expression.'),
     ('PYTHON_SYNTAX_ERROR', 'Python syntax error: "{desc}".'),
     ('INVALID_PYTHON_ATTRIBUTES', (
