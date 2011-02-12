@@ -61,9 +61,8 @@ pyhaa_lexer = dict(
         after = 'tag_name',
     ),
     tag_name = dict(
-        match = MRE('(?P<name>[^\.\#\(\{\s]+)'),
+        match = MRE('(?P<name>[^\.\#\(\{\s]*)'),
         after = 'tag_options',
-        on_fail = plexer_raise(SYNTAX_INFO.EXPECTED_TAGNAME),
     ),
     tag_class_start = dict(
         match = MS('.'),

@@ -16,7 +16,6 @@ __all__ = (
 
 SYNTAX_INFO = DescEnum(
     ('EXPECTED_CLASSNAME', 'Expected class name'),
-    ('EXPECTED_TAGNAME', 'Expected tag name'),
     ('EXPECTED_IDNAME', 'Expected id name'),
     ('INCONSISTENT_TAB_WIDTH', (
         'Inconsistent tab width. Found {tabs} tabs and {spaces} spaces. '

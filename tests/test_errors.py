@@ -30,13 +30,6 @@ class TestErrors(TestCase):
             return e
         self.fail()
 
-    def test_tagname(self):
-        self.assertPSE(
-            SYNTAX_INFO.EXPECTED_TAGNAME,
-            parse_string,
-            '% text',
-        )
-
     def test_classname(self):
         self.assertPSE(
             SYNTAX_INFO.EXPECTED_CLASSNAME,
@@ -56,7 +49,7 @@ class TestErrors(TestCase):
             SYNTAX_INFO.INCONSISTENT_TAB_WIDTH,
             parse_string,
             jl(
-                '%a',
+                '%',
                 '\ttext',
                 '  text',
                 ' text',
@@ -69,7 +62,7 @@ class TestErrors(TestCase):
             SYNTAX_INFO.INCONSISTENT_TAB_WIDTH,
             parse_string,
             jl(
-                '%a',
+                '%',
                 '\ttext',
                 '  text',
                 '   text',
@@ -82,7 +75,7 @@ class TestErrors(TestCase):
             SYNTAX_INFO.TOO_DEEP_INDENT,
             parse_string,
             jl(
-                '%a',
+                '%',
                 ' text',
                 ' text',
                 '   text',
@@ -96,7 +89,7 @@ class TestErrors(TestCase):
                 SYNTAX_INFO.INVALID_INDENT,
                 parse_string,
                 jl(
-                    '%a',
+                    '%',
                     '\ttext',
                     'text',
                     '\t\t text',
@@ -114,7 +107,7 @@ class TestErrors(TestCase):
             SYNTAX_INFO.INVALID_INDENT,
             parse_string,
             jl(
-                '%a',
+                '%',
                 '\ttext',
                 '\t\ttext',
                 ' text',
@@ -125,19 +118,19 @@ class TestErrors(TestCase):
         self.assertPSE(
             SYNTAX_INFO.UNBALANCED_BRACKETS,
             parse_string,
-            '%a{)}',
+            '%{)}',
         )
 
     def test_syntax_error(self):
         self.assertPSE(
             SYNTAX_INFO.PYTHON_SYNTAX_ERROR,
             parse_string,
-            '%a{;}',
+            '%{;}',
         )
 
     def test_invalid_python_attributes(self):
         self.assertPSE(
             SYNTAX_INFO.INVALID_PYTHON_ATTRIBUTES,
             parse_string,
-            '%a{1}',
+            '%{1}',
         )
