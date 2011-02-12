@@ -72,13 +72,25 @@ class PyhaaParsingContext(BasicContext):
                     a, b = divmod(spaces, -eindent)
                     if b:
                         # Undividable space count - we can't handle that
-                        raise Exception
+                        raise PyhaaSyntaxError(
+                            SYNTAX_INFO.INVALID_INDENT,
+                            self,
+                            tabs = tabs,
+                            spaces = spaces,
+                            indent = self.indent,
+                        )
                     self.tab_width = a
                     eindent = 0
                 else:
                     # So we have more tabs than indent level and additional
                     # spaces, and that's incorrect
-                    raise Exception
+                    raise PyhaaSyntaxError(
+                        SYNTAX_INFO.INVALID_INDENT,
+                        self,
+                        tabs = tabs,
+                        spaces = spaces,
+                        indent = self.indent,
+                    )
 
         if eindent == 0:
             self.indent_re()

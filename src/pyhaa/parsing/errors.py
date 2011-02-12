@@ -10,7 +10,7 @@ from ..utils import (
 
 __all__ = (
     'SYNTAX_INFO',
-    'PyhaaSyntaxWarning',
+    'PyhaaSyntaxError',
     'PyhaaSyntaxWarning',
 )
 
@@ -28,7 +28,7 @@ SYNTAX_INFO = DescEnum(
     )),
     ('INVALID_INDENT', (
         'Invalid indent. Found {tabs} tabs and {spaces} spaces. '
-        'Earlier detected tab width is {width}, current indent is {indent}.'
+        'No tab width was detected, current indent is {indent}.'
     )),
     ('INDENT_TAB_SPACES', (
         "Using tabs ({tabs}) and spaces ({spaces}) in one line at once. I'll "
