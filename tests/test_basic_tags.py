@@ -141,24 +141,36 @@ class TestErrors(TestCase):
         self.assertIs(tag1.root, tree)
         self.assertIs(tag2.root, tree)
         self.assertIs(tag3.root, tree)
-        
-    def test_three_levels_inline(self):
-        # Same as in test_three_levels, but we use inline notation
+
+    def test_children_of_inline(self):
         tree = parse_string(jl(
-            '% % %',
+            '% %', # tag1 tag2
+            '  %', # tag3
+            '  %', # tag4
+            '%', # tag5
         ))
-        # Of course, all tags are closed
+        # Let's be sure
         self.assertIs(tree.current, tree)
+        # Root is parent of two children
+        self.assertEqual(len(tree.children), 2)
         # Let's get straight to children
         tag1 = tree.children[0]
         tag2 = tag1.children[0]
         tag3 = tag2.children[0]
+        tag4 = tag2.children[1]
+        tag5 = tree.children[1]
         # Cool! What about parents?
         self.assertIs(tag1.parent, tree)
         self.assertIs(tag2.parent, tag1)
         self.assertIs(tag3.parent, tag2)
+        self.assertIs(tag4.parent, tag2)
+        self.assertIs(tag5.parent, tree)
         # ...or root?
         self.assertIs(tag1.root, tree)
         self.assertIs(tag2.root, tree)
         self.assertIs(tag3.root, tree)
-        
+        self.assertIs(tag4.root, tree)
+        self.assertIs(tag5.root, tree)
+        # Nice family we got here!
+        self.assertIs(tag3.next_sibling, tag4)
+        self.assertIs(tag4.prev_sibling, tag3)
