@@ -73,8 +73,8 @@ def log_error(log):
 @contextmanager
 def clear_exception_context(etypes = None):
     '''
-    Clears explicitly exception context, so 'The above exception was the direct
-    cause of the following exception:' does noe appear.
+    Clears explicitly exception context, so "The above exception was the direct
+    cause of the following exception:" does not appear.
     '''
     if not etypes:
         etypes = Exception

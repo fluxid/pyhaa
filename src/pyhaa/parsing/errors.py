@@ -61,7 +61,7 @@ class PyhaaSyntaxInfo:
         self.kwargs = kwargs
         super().__init__()
 
-    def _get_value(self, name):
+    def get_value(self, name):
         value = None
         if self.overwrite:
             value = self.overwrite.get(name)
@@ -75,13 +75,13 @@ class PyhaaSyntaxInfo:
 
         c = self.context
         # Show actual state of indent level
-        indent = '[{}]'.format(self._get_value('indent'))
+        indent = '[{}]'.format(self.get_value('indent'))
         # Strip indent
-        iline = self._get_value('current_line').rstrip()
+        iline = self.get_value('current_line').rstrip()
         line = iline.lstrip()
         indent_length = len(iline) - len(line)
 
-        pos = self._get_value('current_pos') - indent_length
+        pos = self.get_value('current_pos') - indent_length
         # We start 'dashline' one character earlier.
         # If position is negative, it's problem with indent. Set it
         # to zero so ^ appears one character before start of line
@@ -94,13 +94,13 @@ class PyhaaSyntaxInfo:
             '{} {}\n'
             '{}{}{}'
         ).format(
-            self._get_value('current_lineno'),
+            self.get_value('current_lineno'),
             description,
             indent,
             line,
             ' ' * len(indent),
             '-' * pos,
-            '^' * (self._get_value('length') or 1),
+            '^' * (self.get_value('length') or 1),
         )
 
 
