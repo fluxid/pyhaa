@@ -5,7 +5,10 @@ import tokenize
 
 from fxd.minilexer import Matcher
 
-from .errors import PyhaaSyntaxError
+from .errors import (
+    PyhaaSyntaxError,
+    SYNTAX_INFO,
+)
 
 from ..utils import (
     clear_exception_context,
@@ -59,7 +62,7 @@ class PythonBracketMatcher(Matcher):
 
         with clear_exception_context(PyhaaSyntaxError):
             try:
-                result = ast.parse(line2)
+                ast_tree = ast.parse(line2)
             except SyntaxError as e:
                 # Offset is for bytes, not string characters
                 # Even if I give normal string to parse, I'll get invalid
@@ -75,18 +78,18 @@ class PythonBracketMatcher(Matcher):
                     desc = e.msg,
                 )
 
-        self.check_ast(result)
-        # Substract length of {
+        self.check_ast(context, line, pos, ast_tree)
+        # Substract length of left bracket
         return len(line)-1, line
 
-    def check_ast(self, ast_tree):
+    def check_ast(self, context, ast_tree):
         pass
 
 
 class PythonDictMatcher(PythonBracketMatcher):
     bracket = '{'
 
-    def check_ast(self, ast_tree):
+    def check_ast(self, context, line, pos, ast_tree):
         if not isinstance(ast_tree.body[0].value, (ast.Dict, ast.DictComp)):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.INVALID_PYTHON_ATTRIBUTES,
