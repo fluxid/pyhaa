@@ -15,6 +15,7 @@ __all__ = (
 )
 
 SYNTAX_INFO = DescEnum(
+    ('SYNTAX_ERROR', "Syntax error - lexer couldn't match any token."),
     ('EXPECTED_CLASSNAME', 'Expected class name'),
     ('EXPECTED_IDNAME', 'Expected id name'),
     ('INCONSISTENT_TAB_WIDTH', (

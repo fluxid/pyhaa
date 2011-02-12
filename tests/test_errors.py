@@ -30,6 +30,17 @@ class TestErrors(TestCase):
             return e
         self.fail()
 
+    def test_syntax_error(self):
+        '''
+        Test random syntax error.
+        It won't cover all possible syntax errors, of course.
+        '''
+        self.assertPSE(
+            SYNTAX_INFO.SYNTAX_ERROR,
+            parse_string,
+            '%}',
+        )
+
     def test_classname(self):
         self.assertPSE(
             SYNTAX_INFO.EXPECTED_CLASSNAME,

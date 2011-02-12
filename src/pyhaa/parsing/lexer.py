@@ -22,7 +22,7 @@ def plexer_pass(context):
 pyhaa_lexer = dict(
     _context_class = PyhaaParsingContext,
     _begin = 'line',
-    _on_bad_token = plexer_raise('Could not match any token'),
+    _on_bad_token = plexer_raise(SYNTAX_INFO.SYNTAX_ERROR),
     line = dict(
         match = (
             'line_end',
