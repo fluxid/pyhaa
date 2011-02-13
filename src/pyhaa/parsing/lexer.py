@@ -133,7 +133,7 @@ pyhaa_lexer = dict(
         ),
     ),
     tas_name = dict(
-        match = MRE('\s*[^\s\)\=]+'),
+        match = MRE('\s*(?P<value>[^\s\)\=]+)'),
         after = 'tas_name_after',
     ),
     tas_name_after = dict(

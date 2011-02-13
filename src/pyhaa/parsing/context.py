@@ -31,7 +31,7 @@ class PyhaaParsingContext(BasicContext):
         self.current_opened = 0
         self.opened_stack = list()
 
-        self.last_attribute = None
+        self.last_tas_name = None
         self.creating_tag = False
 
     def token_match(self, token, match):
@@ -125,6 +125,13 @@ class PyhaaParsingContext(BasicContext):
         self.tree.append(Tag())
         self.current_opened += 1
 
+    def end_tag(self):
+        self.creating_tag = False
+        self.last_tas_name = None
+
+    def handle_line_end(self, match):
+        self.end_tag()
+
     def handle_tag_name_start(self, match):
         self.begin_tag()
 
@@ -151,7 +158,7 @@ class PyhaaParsingContext(BasicContext):
         self.tree.current.id_ = match.group(0)
 
     def handle_continue_inline(self, match):
-        self.creating_tag = False
+        self.end_tag()
 
     def handle_text(self, match):
         lol = Text(match.group(0))
@@ -159,6 +166,15 @@ class PyhaaParsingContext(BasicContext):
         # Text is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1
+
+    def handle_tas_name(self, match):
+        name = match.group('value')
+        self.tree.current.simple_arguments[name] = True
+        self.last_tas_name = name
+
+    def handle_tas_value(self, match):
+        self.tree.current.simple_arguments[self.last_tas_name] = match.group('value')
+        self.last_tas_name = None
 
     def indent_de(self, times=1):
         '''

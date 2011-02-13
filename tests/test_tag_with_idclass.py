@@ -63,6 +63,7 @@ class TestTagsWithIdClass(TestCase):
         self.assertEqual(text2.text, 'eggs')
 
     def test_even_more_complicated(self):
+        # Random structure made for lolz
         tree = parse_string(jl(
             '%ul#left_menu.socool',
             '  %li#first_one',
@@ -86,4 +87,44 @@ class TestTagsWithIdClass(TestCase):
         text2, = tag_a2.children
         self.assertEqual(text1.text, 'my pets')
         self.assertEqual(text2.text, 'my sweet photos')
+
+    def test_child_class(self):
+        # Make sure we really called end_tag and 'foo' class wont be assigned
+        # to previous tag
+        tree = parse_string(jl(
+            '%',
+            '  .foo',
+        ))
+        tag1, = tree.children
+        tag2, = tag1.children
+        self.assertSetEqual(tag1.classes, set())
+        self.assertSetEqual(tag2.classes, {'foo'})
+
+    def test_child_id(self):
+        tree = parse_string(jl(
+            '%',
+            '  #foo',
+        ))
+        tag1, = tree.children
+        tag2, = tag1.children
+        self.assertIs(tag1.id_, None)
+        self.assertEqual(tag2.id_, 'foo')
+
+    def test_child_class_inline(self):
+        tree = parse_string(jl(
+            '% .foo',
+        ))
+        tag1, = tree.children
+        tag2, = tag1.children
+        self.assertSetEqual(tag1.classes, set())
+        self.assertSetEqual(tag2.classes, {'foo'})
+
+    def test_child_id_inline(self):
+        tree = parse_string(jl(
+            '% #foo',
+        ))
+        tag1, = tree.children
+        tag2, = tag1.children
+        self.assertIs(tag1.id_, None)
+        self.assertEqual(tag2.id_, 'foo')
 

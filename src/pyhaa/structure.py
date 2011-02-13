@@ -88,11 +88,11 @@ class PyhaaElementOpenable(PyhaaElement):
     #    return self.space_after()
     
 class Tag(PyhaaElementOpenable):
-    def __init__(self, name = None, id_ = None, classes = None, static_arguments = None, python_arguments = None, **kwargs):
+    def __init__(self, name = None, id_ = None, classes = None, simple_arguments = None, python_arguments = None, **kwargs):
         self.name = name
         self.id_ = None
         self.classes = set(classes) if classes else set()
-        self.static_arguments = dict(static_arguments) if static_arguments else dict()
+        self.simple_arguments = dict(simple_arguments) if simple_arguments else dict()
         self.python_arguments = python_arguments
         super().__init__(**kwargs)
     
