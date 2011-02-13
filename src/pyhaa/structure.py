@@ -89,15 +89,36 @@ class PyhaaElementOpenable(PyhaaElement):
     
 class Tag(PyhaaElementOpenable):
     def __init__(self, name = None, id_ = None, classes = None, simple_arguments = None, python_arguments = None, **kwargs):
+        self._classes = None
+        self._simple_arguments = None
+        self._python_arguments = None
+
         self.name = name
         self.id_ = None
         self.classes = set(classes) if classes else set()
-        self.simple_arguments = dict(simple_arguments) if simple_arguments else dict()
-        if python_arguments == '{}':
-            python_arguments = None
-        self.python_arguments = python_arguments or None
+        self.simple_arguments = simple_arguments
+        self.python_arguments = python_arguments
         super().__init__(**kwargs)
-    
+
+    def _get_simple_arguments(self):
+        return self._simple_arguments
+
+    def _set_simple_arguments(self, value):
+        self._simple_arguments = dict(value) if value else dict()
+
+    simple_arguments = property(_get_simple_arguments, _set_simple_arguments)
+
+    def _get_python_arguments(self):
+        return self._python_arguments
+
+    def _set_python_arguments(self, value):
+        if not value or value == '{}':
+            value = None
+        self._python_arguments = value
+
+    python_arguments = property(_get_python_arguments, _set_python_arguments)
+
+
 class Text(PyhaaElement):
     def __init__(self, text = None, escape = True, **kwargs):
         self.text = text

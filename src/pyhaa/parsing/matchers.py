@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import ast
+import re
 import tokenize
 
 from fxd.minilexer import Matcher
@@ -19,6 +20,10 @@ L_BRACKETS = ('{', '(', '[')
 R_BRACKETS = ('}', ')', ']')
 PAIRED_BRACKETS = dict(zip(L_BRACKETS, R_BRACKETS))
 
+RE_EMPTY_BRACKETS = {
+    left: re.compile('^{}[ \t\n\r\f\v]*{}$'.format(re.escape(left), re.escape(right)), re.M)
+    for left, right in PAIRED_BRACKETS.items()
+}
 
 class PythonBracketMatcher(Matcher):
     bracket = None
@@ -79,8 +84,13 @@ class PythonBracketMatcher(Matcher):
                 )
 
         self.check_ast(context, line, pos, ast_tree)
+
+        result = line
+        if RE_EMPTY_BRACKETS[self.bracket].match(result):
+            result = self.bracket + PAIRED_BRACKETS[self.bracket]
+
         # Substract length of left bracket
-        return len(line)-1, line
+        return len(line)-1, result
 
     def check_ast(self, context, ast_tree):
         pass

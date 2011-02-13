@@ -16,13 +16,16 @@ class TestTagAttributes(TestCase):
     def test_empty_attributes(self):
         tree = parse_string(jl(
             '%',
-            '%(){}( \t     )',
+            '%(){}()',
+            '%( \t     ){  \t  }',
         ))
-        tag1, tag2 = tree.children
+        tag1, tag2, tag3 = tree.children
         self.assertDictEqual(tag1.simple_arguments, {})
-        self.assertEqual(tag1.python_arguments, None)
         self.assertDictEqual(tag2.simple_arguments, {})
-        self.assertEqual(tag2.python_arguments, '{}')
+        self.assertDictEqual(tag3.simple_arguments, {})
+        self.assertIs(tag1.python_arguments, None)
+        self.assertIs(tag2.python_arguments, None)
+        self.assertIs(tag3.python_arguments, None)
 
     def test_attributes_names(self):
         # Dirty style but still valid
