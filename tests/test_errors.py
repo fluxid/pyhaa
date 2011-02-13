@@ -5,6 +5,7 @@ Testing parsing of invalid pyhaa code
 Check if for given code are raised correct errors
 '''
 
+import logging
 from unittest import TestCase
 from warnings import catch_warnings
 
@@ -17,6 +18,8 @@ from pyhaa import (
 
 from .helpers import jl
 
+log = logging.getLogger(__name__)
+
 class TestErrors(TestCase):
     def assertPSE(self, _eid, _func, *args, **kwargs):
         '''
@@ -25,6 +28,7 @@ class TestErrors(TestCase):
         try:
             _func(*args, **kwargs)
         except PyhaaSyntaxError as e:
+            log.debug('Got exception: %s', str(e) )
             self.assertEqual(e.eid, _eid)
             # We may want to check further details
             return e
@@ -61,9 +65,9 @@ class TestErrors(TestCase):
             parse_string,
             jl(
                 '%',
-                '\ttext',
-                '  text',
-                ' text',
+                '\t%',
+                '  %',
+                ' %',
             ),
         )
         self.assertEqual(exc.kwargs['width'], 2)
@@ -74,9 +78,9 @@ class TestErrors(TestCase):
             parse_string,
             jl(
                 '%',
-                '\ttext',
-                '  text',
-                '   text',
+                '\t%',
+                '  %',
+                '   %',
             ),
         )
         self.assertEqual(exc.kwargs['width'], 2)
@@ -87,9 +91,9 @@ class TestErrors(TestCase):
             parse_string,
             jl(
                 '%',
-                ' text',
-                ' text',
-                '   text',
+                ' %',
+                ' %',
+                '   %',
             ),
         )
         self.assertEqual(exc.context.tab_width, 1)
@@ -101,12 +105,12 @@ class TestErrors(TestCase):
                 parse_string,
                 jl(
                     '%',
-                    '\ttext',
-                    'text',
-                    '\t\t text',
+                    '\t%',
+                    '%',
+                    '\t\t %',
                 ),
             )
-        # Also, test if we're warned about spaces and tabs
+        # Also, test if we were warned about spaces and tabs
         self.assertEqual(len(warns), 1)
         warning = warns[0].message
         self.assertTrue(isinstance(warning, PyhaaSyntaxWarning))
@@ -119,9 +123,27 @@ class TestErrors(TestCase):
             parse_string,
             jl(
                 '%',
+                '\t%',
+                '\t\t%',
+                ' %',
+            ),
+        )
+
+    def test_unexpected_indent_1(self):
+        self.assertPSE(
+            SYNTAX_INFO.UNEXPECTED_INDENT,
+            parse_string,
+            '\t%',
+        )
+
+    def test_unexpected_indent_2(self):
+        self.assertPSE(
+            SYNTAX_INFO.UNEXPECTED_INDENT,
+            parse_string,
+            jl(
+                '%',
                 '\ttext',
-                '\t\ttext',
-                ' text',
+                '\t\tmore text',
             ),
         )
 

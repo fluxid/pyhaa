@@ -31,6 +31,8 @@ class PyhaaParsingContext(BasicContext):
         self.current_opened = 0
         self.opened_stack = list()
 
+        self.creating_tag = False
+
     def token_match(self, token, match):
         super().token_match(token, match)
         func = getattr(self, 'handle_' + token, None)
@@ -118,8 +120,16 @@ class PyhaaParsingContext(BasicContext):
             )
 
     def handle_tag_name_start(self, match):
+        self.creating_tag = True
         self.tree.append(Tag())
         self.current_opened += 1
+
+    def continue_inline(self, match):
+        self.creating_tag = False
+
+    def handle_text(self, match):
+        lol = Text(match.group(0))
+        self.tree.append(lol)
 
     def indent_de(self, times=1):
         '''

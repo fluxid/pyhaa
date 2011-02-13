@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Testing basic structures like tags and text
+Testing basic tag structures and pyhaa tree structure in general
 '''
 
 from unittest import TestCase
@@ -12,7 +12,7 @@ from pyhaa import (
 
 from .helpers import jl
 
-class TestErrors(TestCase):
+class TestBasicTags(TestCase):
     def test_one_tag(self):
         tree = parse_string(jl(
             '%',
@@ -174,3 +174,4 @@ class TestErrors(TestCase):
         # Nice family we got here!
         self.assertIs(tag3.next_sibling, tag4)
         self.assertIs(tag4.prev_sibling, tag3)
+
