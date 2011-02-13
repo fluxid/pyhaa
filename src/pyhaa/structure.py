@@ -94,11 +94,19 @@ class Tag(PyhaaElementOpenable):
         self._python_attributes = None
 
         self.name = name
-        self.id_ = None
-        self.classes = set(classes) if classes else set()
+        self.id_ = id_
+        self.classes = classes
         self.simple_attributes = simple_attributes
         self.python_attributes = python_attributes
         super().__init__(**kwargs)
+
+    def _get_classes(self):
+        return self._classes
+
+    def _set_classes(self, value):
+        self._classes = set(value) if value else set()
+
+    classes = property(_get_classes, _set_classes)
 
     def _get_simple_attributes(self):
         return self._simple_attributes
