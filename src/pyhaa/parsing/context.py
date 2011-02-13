@@ -176,6 +176,9 @@ class PyhaaParsingContext(BasicContext):
         self.tree.current.simple_arguments[self.last_tas_name] = match.group('value')
         self.last_tas_name = None
 
+    def handle_tap_rest(self, match):
+        self.tree.current.python_arguments = match
+
     def indent_de(self, times=1):
         '''
         Dedented line - times attribute means how many levels do we dedent

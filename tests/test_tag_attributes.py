@@ -14,11 +14,15 @@ from .helpers import jl
 
 class TestTagAttributes(TestCase):
     def test_empty_attributes(self):
-        # This should simply pass
         tree = parse_string(jl(
-            '%()',
-            '%( \t     )',
+            '%',
+            '%(){}( \t     )',
         ))
+        tag1, tag2 = tree.children
+        self.assertDictEqual(tag1.simple_arguments, {})
+        self.assertEqual(tag1.python_arguments, None)
+        self.assertDictEqual(tag2.simple_arguments, {})
+        self.assertEqual(tag2.python_arguments, '{}')
 
     def test_attributes_names(self):
         # Dirty style but still valid
@@ -37,8 +41,9 @@ class TestTagAttributes(TestCase):
 
     def test_attributes_mixed(self):
         # Even dirtier
+        # Note that there is %(...)(...)
         tree = parse_string(jl(
-            '%( foo_bar-baz \t = \'lol\' \t spam = eggs i_feel-great- \t lmao=" rofl\t\'")',
+            '%( foo_bar-baz \t = \'lol\' \t)( spam = eggs i_feel-great- \t lmao=" rofl\t\'")',
         ))
         tag, = tree.children
         self.assertDictEqual(tag.simple_arguments, {
@@ -48,4 +53,13 @@ class TestTagAttributes(TestCase):
             'lmao': " rofl\t'",
         })
 
+    def test_python_attributes(self):
+        # Even dirtier
+        tree = parse_string(jl(
+            '%{sup:nah}{"at"+"tribute": ("value"*2).upper()}',
+        ))
+        tag, = tree.children
+        self.assertDictEqual(eval(tag.python_arguments), {
+            'attribute': 'VALUEVALUE',
+        })
 

@@ -93,7 +93,9 @@ class Tag(PyhaaElementOpenable):
         self.id_ = None
         self.classes = set(classes) if classes else set()
         self.simple_arguments = dict(simple_arguments) if simple_arguments else dict()
-        self.python_arguments = python_arguments
+        if python_arguments == '{}':
+            python_arguments = None
+        self.python_arguments = python_arguments or None
         super().__init__(**kwargs)
     
 class Text(PyhaaElement):
