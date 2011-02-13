@@ -61,7 +61,7 @@ pyhaa_lexer = dict(
         after = 'tag_name',
     ),
     tag_name = dict(
-        match = MRE('(?P<name>[^\.\#\(\{\s]*)'),
+        match = MRE('[^\.\#\(\{\s]*'),
         after = 'tag_options',
     ),
     tag_class_start = dict(
@@ -69,7 +69,7 @@ pyhaa_lexer = dict(
         after = 'tag_class_name',
     ),
     tag_class_name = dict(
-        match = MRE('(?P<name>[^\.\#\(\{\s]+)'),
+        match = MRE('[^\.\#\(\{\s]+'),
         after = 'tag_options',
         on_fail = plexer_raise(SYNTAX_INFO.EXPECTED_CLASSNAME),
     ),
@@ -78,7 +78,7 @@ pyhaa_lexer = dict(
         after = 'tag_id_name',
     ),
     tag_id_name = dict(
-        match = MRE('(?P<name>[^\.\#\(\{\s]+)'),
+        match = MRE('[^\.\#\(\{\s]+'),
         after = 'tag_options',
         on_fail = plexer_raise(SYNTAX_INFO.EXPECTED_IDNAME),
     ),

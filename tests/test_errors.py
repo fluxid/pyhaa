@@ -167,3 +167,11 @@ class TestErrors(TestCase):
             parse_string,
             '%{1}',
         )
+
+    def test_id_already_set(self):
+        self.assertPSE(
+            SYNTAX_INFO.ID_ALREADY_SET,
+            parse_string,
+            '#s#d',
+        )
+

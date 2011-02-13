@@ -41,6 +41,7 @@ SYNTAX_INFO = DescEnum(
         'Pythonic attributes must be dictionary or '
         'dictionary comprehension literal.'
     )),
+    ('ID_ALREADY_SET', "Tag's id is already set."),
 )
 
 log = logging.getLogger(__name__)
