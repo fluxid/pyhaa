@@ -1,21 +1,33 @@
 # -*- coding: utf-8 -*-
 
-class PyhaaTree:
+class PyhaaParent:
+    def __init__(self, **kwargs):
+        self.children = list()
+        self.root = self
+        super().__init__(**kwargs)
+
+    def append(self, other):
+        other.root = self.root
+        other.parent = self
+        if self.children:
+            last = self.children[-1]
+            last.next_sibling = other
+            other.prev_sibling = last
+        self.children.append(other)
+        return self
+    
+    def __iter__(self):
+        return iter(self.children)
+
+
+class PyhaaTree(PyhaaParent):
     def __init__(self):
         self.current = self
-        self.children = list()
-        self.prev_sibling = None
-        self.next_sibling = None
+        super().__init__()
 
     def append(self, other):
         if self.current is self:
-            other.root = self
-            other.parent = self
-            if self.children:
-                last = self.children[-1]
-                last.next_sibling = other
-                other.prev_sibling = last
-            self.children.append(other)
+            super().append(other)
         else:
             self.current.append(other)
         self.current = other
@@ -24,6 +36,7 @@ class PyhaaTree:
         for i in range(times):
             if self.current is not self:
                 self.current = self.current.parent
+
 
 class PyhaaElement:
     def __init__(self, ws_out_left = True, ws_out_right = True):
@@ -52,22 +65,12 @@ class PyhaaElement:
     #    # We have no next sibling and no parent
     #    return False
 
-class PyhaaElementOpenable(PyhaaElement):
+
+class PyhaaElementOpenable(PyhaaParent, PyhaaElement):
     def __init__(self, ws_in_left = True, ws_in_right = True, **kwargs):
-        self.children = list()
         self.ws_in_left = ws_in_left
         self.ws_in_right = ws_in_right
         super().__init__(**kwargs)
-
-    def append(self, other):
-        other.root = self.root
-        other.parent = self
-        if self.children:
-            last = self.children[-1]
-            last.next_sibling = other
-            other.prev_sibling = last
-        self.children.append(other)
-        return self
 
     #def space_after_opening(self):
     #    if self.children:
@@ -86,7 +89,8 @@ class PyhaaElementOpenable(PyhaaElement):
 
     #def space_after_closing(self):
     #    return self.space_after()
-    
+
+
 class Tag(PyhaaElementOpenable):
     def __init__(self, name = None, id_ = None, classes = None, simple_attributes = None, python_attributes = None, **kwargs):
         self._classes = None

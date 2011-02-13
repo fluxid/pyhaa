@@ -11,8 +11,9 @@ from .errors import (
 )
 
 from ..structure import (
-    PyhaaTree,
     PyhaaElementOpenable,
+    PyhaaParent,
+    PyhaaTree,
     Tag,
     Text,
 )
@@ -161,8 +162,15 @@ class PyhaaParsingContext(BasicContext):
         self.end_tag()
 
     def handle_text(self, match):
-        lol = Text(match.group(0))
-        self.tree.append(lol)
+        text = match.group(0).strip()
+        if isinstance(self.tree.current, PyhaaParent):
+            children = self.tree.current.children
+            if children:
+                last_one = children[-1]
+                if isinstance(last_one, Text):
+                    last_one.text = last_one.text + ' ' + text
+                    return
+        self.tree.append(Text(text))
         # Text is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1

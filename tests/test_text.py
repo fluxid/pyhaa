@@ -81,3 +81,13 @@ class TestText(TestCase):
         self.assertTrue(isinstance(text1, Text))
         self.assertEqual(text1.text, '%text')
 
+    def test_joining(self):
+        tree = parse_string(jl(
+            'foo',
+            '\%',
+            'bar',
+        ))
+        text1, = tree
+        self.assertTrue(isinstance(text1, Text))
+        self.assertEqual(text1.text, 'foo % bar')
+
