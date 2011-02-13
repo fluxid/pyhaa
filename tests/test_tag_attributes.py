@@ -20,12 +20,12 @@ class TestTagAttributes(TestCase):
             '%( \t     ){  \t  }',
         ))
         tag1, tag2, tag3 = tree.children
-        self.assertDictEqual(tag1.simple_arguments, {})
-        self.assertDictEqual(tag2.simple_arguments, {})
-        self.assertDictEqual(tag3.simple_arguments, {})
-        self.assertIs(tag1.python_arguments, None)
-        self.assertIs(tag2.python_arguments, None)
-        self.assertIs(tag3.python_arguments, None)
+        self.assertDictEqual(tag1.simple_attributes, {})
+        self.assertDictEqual(tag2.simple_attributes, {})
+        self.assertDictEqual(tag3.simple_attributes, {})
+        self.assertIs(tag1.python_attributes, None)
+        self.assertIs(tag2.python_attributes, None)
+        self.assertIs(tag3.python_attributes, None)
 
     def test_attributes_names(self):
         # Dirty style but still valid
@@ -34,11 +34,11 @@ class TestTagAttributes(TestCase):
             '%( \t baz\t \t)',
         ))
         tag1, tag2 = tree.children
-        self.assertDictEqual(tag1.simple_arguments, {
+        self.assertDictEqual(tag1.simple_attributes, {
             'foo': True,
             'bar': True,
         })
-        self.assertDictEqual(tag2.simple_arguments, {
+        self.assertDictEqual(tag2.simple_attributes, {
             'baz': True,
         })
 
@@ -49,7 +49,7 @@ class TestTagAttributes(TestCase):
             '%( foo_bar-baz \t = \'lol\' \t)( spam = eggs i_feel-great- \t lmao=" rofl\t\'")',
         ))
         tag, = tree.children
-        self.assertDictEqual(tag.simple_arguments, {
+        self.assertDictEqual(tag.simple_attributes, {
             'foo_bar-baz': 'lol',
             'spam': 'eggs',
             'i_feel-great-': True,
@@ -62,7 +62,7 @@ class TestTagAttributes(TestCase):
             '%{sup:nah}{"at"+"tribute": ("value"*2).upper()}',
         ))
         tag, = tree.children
-        self.assertDictEqual(eval(tag.python_arguments), {
+        self.assertDictEqual(eval(tag.python_attributes), {
             'attribute': 'VALUEVALUE',
         })
 

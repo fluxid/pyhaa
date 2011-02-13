@@ -88,35 +88,35 @@ class PyhaaElementOpenable(PyhaaElement):
     #    return self.space_after()
     
 class Tag(PyhaaElementOpenable):
-    def __init__(self, name = None, id_ = None, classes = None, simple_arguments = None, python_arguments = None, **kwargs):
+    def __init__(self, name = None, id_ = None, classes = None, simple_attributes = None, python_attributes = None, **kwargs):
         self._classes = None
-        self._simple_arguments = None
-        self._python_arguments = None
+        self._simple_attributes = None
+        self._python_attributes = None
 
         self.name = name
         self.id_ = None
         self.classes = set(classes) if classes else set()
-        self.simple_arguments = simple_arguments
-        self.python_arguments = python_arguments
+        self.simple_attributes = simple_attributes
+        self.python_attributes = python_attributes
         super().__init__(**kwargs)
 
-    def _get_simple_arguments(self):
-        return self._simple_arguments
+    def _get_simple_attributes(self):
+        return self._simple_attributes
 
-    def _set_simple_arguments(self, value):
-        self._simple_arguments = dict(value) if value else dict()
+    def _set_simple_attributes(self, value):
+        self._simple_attributes = dict(value) if value else dict()
 
-    simple_arguments = property(_get_simple_arguments, _set_simple_arguments)
+    simple_attributes = property(_get_simple_attributes, _set_simple_attributes)
 
-    def _get_python_arguments(self):
-        return self._python_arguments
+    def _get_python_attributes(self):
+        return self._python_attributes
 
-    def _set_python_arguments(self, value):
+    def _set_python_attributes(self, value):
         if not value or value == '{}':
             value = None
-        self._python_arguments = value
+        self._python_attributes = value
 
-    python_arguments = property(_get_python_arguments, _set_python_arguments)
+    python_attributes = property(_get_python_attributes, _set_python_attributes)
 
 
 class Text(PyhaaElement):

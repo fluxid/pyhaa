@@ -169,15 +169,15 @@ class PyhaaParsingContext(BasicContext):
 
     def handle_tas_name(self, match):
         name = match.group('value')
-        self.tree.current.simple_arguments[name] = True
+        self.tree.current.simple_attributes[name] = True
         self.last_tas_name = name
 
     def handle_tas_value(self, match):
-        self.tree.current.simple_arguments[self.last_tas_name] = match.group('value')
+        self.tree.current.simple_attributes[self.last_tas_name] = match.group('value')
         self.last_tas_name = None
 
     def handle_tap_rest(self, match):
-        self.tree.current.python_arguments = match
+        self.tree.current.python_attributes = match
 
     def indent_de(self, times=1):
         '''
