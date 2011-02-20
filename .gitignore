@@ -1,4 +1,7 @@
 *.py[co]
 *.sw[po]
-venv
+/venv
 /*.tar.gz
+/build
+/dist
+/src/pyhaa.egg-info
