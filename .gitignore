@@ -1,2 +1,4 @@
 *.py[co]
 *.sw[po]
+venv
+/*.tar.gz
