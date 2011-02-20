@@ -180,7 +180,7 @@ class PyhaaParsingContext(BasicContext):
         self.end_tag()
 
     def handle_text(self, match):
-        text = match.group(0).strip()
+        text = match.group('value')
         if isinstance(self.tree.current, PyhaaParent):
             children = self.tree.current.children
             if children:

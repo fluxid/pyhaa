@@ -60,11 +60,11 @@ pyhaa_lexer = dict(
         ),
     ),
     escape = dict(
-        match = MS('\\'),
+        match = MRE('\\\\\s*'),
         after = 'text',
     ),
     text = dict(
-        match = MRE('.+$'),
+        match = MRE('(?P<value>.+?)[ \t]*$'),
         after = 'line_end',
     ),
     tag_start = dict(
@@ -181,4 +181,20 @@ pyhaa_lexer = dict(
         match = PythonDictMatcher(),
         after = 'tag_after_attributes',
     ),
+    #code_statement_start = dict(
+    #    match = MRE('\-\s*'),
+    #    after = 'code_statement',
+    #),
+    #code_statement = dict(
+    #    match = MRE('.+?\s*$'),
+    #    after = 'line_end',
+    #),
+    #code_value_start = dict(
+    #    match = MRE('\=\s*'),
+    #    after = 'code_value',
+    #),
+    #code_value = dict(
+    #    match = MRE('.+?\s*$'),
+    #    after = 'line_end',
+    #),
 )

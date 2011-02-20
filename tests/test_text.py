@@ -109,3 +109,12 @@ class TestText(TestCase):
         self.assertTrue(isinstance(text1, Text))
         self.assertEqual(text1.text, 'foo % bar')
 
+    def test_stripped(self):
+        tree = parse_string(jl(
+            '\  \t  foo   \t  ',
+            'bar  \t  ',
+        ))
+        text1, = tree
+        self.assertTrue(isinstance(text1, Text))
+        self.assertEqual(text1.text, 'foo bar')
+
