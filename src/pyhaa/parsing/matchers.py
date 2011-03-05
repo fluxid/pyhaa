@@ -46,7 +46,7 @@ RE_EMPTY_BRACKETS = {
 class PythonBracketMatcher(Matcher):
     bracket = None
 
-    def match(self, context, line, pos):
+    def match(self, parser, line, pos):
         assert self.bracket in L_BRACKETS
 
         # We already matched left bracket, so
@@ -71,7 +71,7 @@ class PythonBracketMatcher(Matcher):
                     elif tstring in R_BRACKETS and tstring != stack.pop():
                         raise PyhaaSyntaxError(
                             SYNTAX_INFO.UNBALANCED_BRACKETS,
-                            context,
+                            parser,
                             dict(current_pos = pos + scol),
                         )
                 if not stack:
@@ -96,12 +96,12 @@ class PythonBracketMatcher(Matcher):
                 offset = len(fragment) - 1
                 raise PyhaaSyntaxError(
                     SYNTAX_INFO.PYTHON_SYNTAX_ERROR,
-                    context,
+                    parser,
                     dict(current_pos = pos + offset),
                     desc = e.msg,
                 )
 
-        self.check_ast(context, line, pos, ast_tree)
+        self.check_ast(parser, line, pos, ast_tree)
 
         result = line
         if RE_EMPTY_BRACKETS[self.bracket].match(result):
@@ -110,18 +110,18 @@ class PythonBracketMatcher(Matcher):
         # Substract length of left bracket
         return len(line)-1, result
 
-    def check_ast(self, context, ast_tree):
+    def check_ast(self, parser, ast_tree):
         pass
 
 
 class PythonDictMatcher(PythonBracketMatcher):
     bracket = '{'
 
-    def check_ast(self, context, line, pos, ast_tree):
+    def check_ast(self, parser, line, pos, ast_tree):
         if not isinstance(ast_tree.body[0].value, (ast.Dict, ast.DictComp)):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.INVALID_PYTHON_ATTRIBUTES,
-                context,
+                parser,
                 dict(
                     current_pos = pos,
                     length=len(line),

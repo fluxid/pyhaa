@@ -24,23 +24,20 @@ from fxd.minilexer import (
     MS,
 )
 
-from .context import PyhaaParsingContext
 from .errors import PyhaaSyntaxError, SYNTAX_INFO
 from .matchers import PythonDictMatcher
 
 
 def plexer_raise(eidd):
-    def do_raise(context):
-        raise PyhaaSyntaxError(eidd, context)
+    def do_raise(parser):
+        raise PyhaaSyntaxError(eidd, parser)
     return do_raise
 
-def plexer_pass(context):
+def plexer_pass(parser):
     pass
 
 pyhaa_lexer = dict(
-    _context_class = PyhaaParsingContext,
     _begin = 'line',
-    _on_bad_token = plexer_raise(SYNTAX_INFO.SYNTAX_ERROR),
     line = dict(
         match = (
             'line_end',
