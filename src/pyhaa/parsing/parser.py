@@ -42,7 +42,7 @@ from ..structure import (
 
 class PyhaaParser(Parser):
     def __init__(self):
-        super().__init__(pyhaa_lexer)
+        super().__init__(pyhaa_lexer, True)
         self.indent = 0
         self.tab_width = 0
         self.length = 0

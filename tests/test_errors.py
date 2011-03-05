@@ -114,7 +114,7 @@ class TestErrors(TestCase):
                 '   %',
             ),
         )
-        self.assertEqual(exc.context.tab_width, 1)
+        self.assertEqual(exc.parser.tab_width, 1)
 
     def test_invalid_indent_1(self):
         with catch_warnings(record=True) as warns:

@@ -108,7 +108,7 @@ class PythonBracketMatcher(Matcher):
             result = self.bracket + PAIRED_BRACKETS[self.bracket]
 
         # Substract length of left bracket
-        return len(line)-1, result
+        return pos + len(line), result
 
     def check_ast(self, parser, ast_tree):
         pass
