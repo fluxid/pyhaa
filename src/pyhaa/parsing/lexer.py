@@ -25,7 +25,10 @@ from fxd.minilexer import (
 )
 
 from .errors import PyhaaSyntaxError, SYNTAX_INFO
-from .matchers import PythonDictMatcher
+from .matchers import (
+    ConstantLength,
+    PythonDictMatcher,
+)
 
 
 def plexer_raise(eidd):
@@ -170,7 +173,7 @@ pyhaa_lexer = dict(
         after = 'tag_after_attributes',
     ),
     tap_start = dict(
-        match = MS('{'),
+        match = ConstantLength(MS('{'), 0),
         after = 'tap_rest',
         on_fail = plexer_pass,
     ),

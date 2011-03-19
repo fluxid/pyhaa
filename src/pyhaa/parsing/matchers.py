@@ -47,13 +47,9 @@ class PythonBracketMatcher(Matcher):
     bracket = None
 
     def match(self, parser, line, pos):
-        assert self.bracket in L_BRACKETS
-
-        # We already matched left bracket, so
-        # we need to add it to the beginning
-        line = self.bracket + line[pos:]
-        # and take pos one char back...
-        pos -= 1
+        # We're not interested in what was before
+        line = line[pos:]
+        assert self.bracket in L_BRACKETS and line[0] == self.bracket
 
         readline = FakeByteReadline((line.encode('utf8'),))
         stack = list()
@@ -107,7 +103,6 @@ class PythonBracketMatcher(Matcher):
         if RE_EMPTY_BRACKETS[self.bracket].match(result):
             result = self.bracket + PAIRED_BRACKETS[self.bracket]
 
-        # Substract length of left bracket
         return pos + len(line), result
 
     def check_ast(self, parser, ast_tree):
@@ -128,3 +123,17 @@ class PythonDictMatcher(PythonBracketMatcher):
                 ),
             )
 
+
+class ConstantLength(Matcher):
+    def __init__(self, orig, length):
+        self.orig = orig
+        self.length = length
+        super().__init__()
+
+    def match(self, parser, line, pos):
+        result = self.orig.match(parser, line, pos)
+        if result is not None:
+            _, result = result
+            return pos + self.length, result
+        return None
+        
