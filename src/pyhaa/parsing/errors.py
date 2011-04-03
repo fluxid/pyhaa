@@ -66,7 +66,7 @@ log = logging.getLogger(__name__)
 
 
 class PyhaaSyntaxInfo:
-    def __init__(self, _eidd, _context, _overwrite=None, **kwargs):
+    def __init__(self, _eidd, _parser, _overwrite=None, **kwargs):
         if isinstance(_eidd, int):
             eid = _eidd
             description = SYNTAX_INFO.get_desc(eid)
@@ -76,7 +76,7 @@ class PyhaaSyntaxInfo:
 
         self.eid = eid
         self.description = description
-        self.context = _context
+        self.parser = _parser
         self.overwrite = _overwrite
         self.kwargs = kwargs
         super().__init__()
@@ -86,14 +86,13 @@ class PyhaaSyntaxInfo:
         if self.overwrite:
             value = self.overwrite.get(name)
         if value is None:
-            value = getattr(self.context, name)
+            value = getattr(self.parser, name)
         return value
 
     @log_error(log)
     def __str__(self):
         description = self.description.format(**self.kwargs)
 
-        c = self.context
         # Show actual state of indent level
         indent = '[{}]'.format(self.get_value('indent'))
         # Strip indent

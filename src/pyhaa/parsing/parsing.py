@@ -21,9 +21,8 @@
 from io import StringIO
 #import logging
 
-from fxd.minilexer import parse
-
 from .lexer import pyhaa_lexer
+from .parser import PyhaaParser
 
 __all__ = (
     'parse_io',
@@ -35,9 +34,10 @@ __all__ = (
 
 
 def parse_readline(readline):
-    context = parse(pyhaa_lexer, readline)
-    context.finish()
-    return context.tree
+    parser = PyhaaParser()
+    parser.parse_readline(readline)
+    parser.finish()
+    return parser.tree
 
 def parse_io(fileobj):
     return parse_readline(fileobj.readline)

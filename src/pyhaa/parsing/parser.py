@@ -20,13 +20,14 @@
 
 #import logging
 
-from fxd.minilexer import BasicContext
+from fxd.minilexer import Parser
 
 from .errors import (
     PyhaaSyntaxError,
     SYNTAX_INFO,
     warn_syntax,
 )
+from .lexer import pyhaa_lexer
 
 from ..structure import (
     PyhaaElementOpenable,
@@ -39,9 +40,9 @@ from ..structure import (
 #log = logging.getLogger(__name__)
 
 
-class PyhaaParsingContext(BasicContext):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class PyhaaParser(Parser):
+    def __init__(self):
+        super().__init__(pyhaa_lexer, True)
         self.indent = 0
         self.tab_width = 0
         self.length = 0
@@ -58,6 +59,9 @@ class PyhaaParsingContext(BasicContext):
         func = getattr(self, 'handle_' + token, None)
         if func:
             func(match)
+
+    def on_bad_token(self):
+        raise PyhaaSyntaxError(SYNTAX_INFO.SYNTAX_ERROR, self)
 
     def handle_indent(self, match):
         match = match.group(0)

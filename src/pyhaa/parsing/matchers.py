@@ -46,14 +46,10 @@ RE_EMPTY_BRACKETS = {
 class PythonBracketMatcher(Matcher):
     bracket = None
 
-    def match(self, context, line, pos):
-        assert self.bracket in L_BRACKETS
-
-        # We already matched left bracket, so
-        # we need to add it to the beginning
-        line = self.bracket + line[pos:]
-        # and take pos one char back...
-        pos -= 1
+    def match(self, parser, line, pos):
+        # We're not interested in what was before
+        line = line[pos:]
+        assert self.bracket in L_BRACKETS and line[0] == self.bracket
 
         readline = FakeByteReadline((line.encode('utf8'),))
         stack = list()
@@ -71,7 +67,7 @@ class PythonBracketMatcher(Matcher):
                     elif tstring in R_BRACKETS and tstring != stack.pop():
                         raise PyhaaSyntaxError(
                             SYNTAX_INFO.UNBALANCED_BRACKETS,
-                            context,
+                            parser,
                             dict(current_pos = pos + scol),
                         )
                 if not stack:
@@ -96,35 +92,48 @@ class PythonBracketMatcher(Matcher):
                 offset = len(fragment) - 1
                 raise PyhaaSyntaxError(
                     SYNTAX_INFO.PYTHON_SYNTAX_ERROR,
-                    context,
+                    parser,
                     dict(current_pos = pos + offset),
                     desc = e.msg,
                 )
 
-        self.check_ast(context, line, pos, ast_tree)
+        self.check_ast(parser, line, pos, ast_tree)
 
         result = line
         if RE_EMPTY_BRACKETS[self.bracket].match(result):
             result = self.bracket + PAIRED_BRACKETS[self.bracket]
 
-        # Substract length of left bracket
-        return len(line)-1, result
+        return pos + len(line), result
 
-    def check_ast(self, context, ast_tree):
+    def check_ast(self, parser, ast_tree):
         pass
 
 
 class PythonDictMatcher(PythonBracketMatcher):
     bracket = '{'
 
-    def check_ast(self, context, line, pos, ast_tree):
+    def check_ast(self, parser, line, pos, ast_tree):
         if not isinstance(ast_tree.body[0].value, (ast.Dict, ast.DictComp)):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.INVALID_PYTHON_ATTRIBUTES,
-                context,
+                parser,
                 dict(
                     current_pos = pos,
                     length=len(line),
                 ),
             )
 
+
+class ConstantLength(Matcher):
+    def __init__(self, orig, length):
+        self.orig = orig
+        self.length = length
+        super().__init__()
+
+    def match(self, parser, line, pos):
+        result = self.orig.match(parser, line, pos)
+        if result is not None:
+            _, result = result
+            return pos + self.length, result
+        return None
+        
