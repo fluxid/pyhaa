@@ -147,7 +147,8 @@ pyhaa_lexer = dict(
     tas_inside = dict(
         match = (
             'tas_name',
-            'tas_end'
+            'tas_end',
+            'tas_line_end',
         ),
     ),
     tas_name = dict(
@@ -171,6 +172,10 @@ pyhaa_lexer = dict(
     tas_end = dict(
         match = MRE('\s*\)'),
         after = 'tag_after_attributes',
+    ),
+    tas_line_end = dict(
+        match = MRE('\s*$'),
+        after = 'tas_inside',
     ),
     tap_start = dict(
         match = ConstantLength(MS('{'), 0),

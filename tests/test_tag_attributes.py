@@ -74,6 +74,19 @@ class TestTagAttributes(TestCase):
             'lmao': " rofl\t'",
         })
 
+    def test_attributes_multiline(self):
+        tree = parse_string(jl(
+            '%( ',
+            '   spam = eggs ',
+            'herp="derp"',
+            ')',
+        ))
+        tag, = tree.children
+        self.assertDictEqual(tag.simple_attributes, {
+            'spam': 'eggs',
+            'herp': 'derp',
+        })
+
     def test_python_attributes(self):
         # Even dirtier
         tree = parse_string(jl(
