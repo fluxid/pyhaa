@@ -84,3 +84,37 @@ class TestTagAttributes(TestCase):
             'attribute': 'VALUEVALUE',
         })
 
+    def test_python_attributes_multiline(self):
+        # Even dirtier
+        tree = parse_string(jl(
+            '%{',
+            '\t    "sup":  "nah"',
+            ' } %{',
+            '   "at"+"tri"',
+            '      "bute": (',
+            '"value"*2).upper()',
+            '   }',
+        ))
+        tag1, = tree.children
+        tag2, = tag1.children
+        self.assertDictEqual(eval(tag1.python_attributes), {
+            'sup': 'nah',
+        })
+        self.assertDictEqual(eval(tag2.python_attributes), {
+            'attribute': 'VALUEVALUE',
+        })
+    
+    def test_for_stupid_readahead(self):
+        tree = parse_string(jl(
+            '%{}',
+            '%()',
+            '%{ \t }',
+            '%( \t )',
+            '%{}',
+            '%()',
+            '%{ \t }',
+            '%( \t )',
+            '%a',
+        ))
+        self.assertEqual(len(tree.children), 9)
+

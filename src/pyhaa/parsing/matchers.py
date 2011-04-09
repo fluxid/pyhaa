@@ -47,12 +47,26 @@ class PythonBracketMatcher(Matcher):
     bracket = None
 
     def match(self, parser, line, pos):
+        parser.cache_push()
+
         # We're not interested in what was before
         line = line[pos:]
         assert self.bracket in L_BRACKETS and line[0] == self.bracket
+        lines = []
 
-        readline = FakeByteReadline((line.encode('utf8'),))
+        def linegen():
+            yield line
+            while True:
+                yield parser.readline()
+        lineiter = linegen()
+        
+        def readline():
+            current_line = next(lineiter, '')
+            lines.append(current_line)
+            return current_line.encode('utf8')
+
         stack = list()
+        erow = 1
         ecol = 0
 
         try:
@@ -76,17 +90,27 @@ class PythonBracketMatcher(Matcher):
             # Ignore. Let ast parse it again, actual error may be different
             pass
 
-        line = line[:ecol]
-        line2 = line.encode('utf8') + b'\n'
+        #import pdb; pdb.set_trace()
+
+        lines = lines[:srow]
+        lines[-1] = lines[-1][:ecol]
+
+        # FIXME Tokenizer reads a bit ahead... Deal with it better than below
+        parser.cache_pop()
+        for i in range(len(lines)-1):
+            parser.readline()
+
+        jlines = (''.join(lines)+'\n')
+        jlines2 = jlines.encode('utf8')
 
         with clear_exception_context(PyhaaSyntaxError):
             try:
-                ast_tree = ast.parse(line2)
+                ast_tree = ast.parse(jlines2)
             except SyntaxError as e:
                 # Offset is for bytes, not string characters
                 # Even if I give normal string to parse, I'll get invalid
                 # offset if line has unicode characters before it
-                fragment = line2[:e.offset].decode('utf8')
+                fragment = jlines2[:e.offset].decode('utf8')
                 # substract 1 because python parser counts from one, and we
                 # count from zero
                 offset = len(fragment) - 1
@@ -99,11 +123,14 @@ class PythonBracketMatcher(Matcher):
 
         self.check_ast(parser, line, pos, ast_tree)
 
-        result = line
+        result = jlines
         if RE_EMPTY_BRACKETS[self.bracket].match(result):
             result = self.bracket + PAIRED_BRACKETS[self.bracket]
 
-        return pos + len(line), result
+        if len(lines) > 1:
+            pos = 0
+
+        return pos + len(lines[-1]), result
 
     def check_ast(self, parser, ast_tree):
         pass
@@ -117,10 +144,10 @@ class PythonDictMatcher(PythonBracketMatcher):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.INVALID_PYTHON_ATTRIBUTES,
                 parser,
-                dict(
-                    current_pos = pos,
-                    length=len(line),
-                ),
+                #dict(
+                #    current_pos = pos,
+                #    length = len(line),
+                #),
             )
 
 
