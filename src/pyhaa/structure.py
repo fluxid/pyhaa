@@ -155,3 +155,5 @@ class Text(PyhaaElement):
         self.escape = escape
         super().__init__(**kwargs)
 
+class ClassLevel:
+    pass
