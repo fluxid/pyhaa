@@ -35,8 +35,6 @@ class CodeGen:
 
         self.indent_level = 0
 
-    def write_indent(self, io):
-
     def indent(self):
         self.indent_level += 1
 
@@ -44,7 +42,7 @@ class CodeGen:
         if self.indent_level and times:
             self.indent_level -= min(times, self.indent_level)
 
-    def write(self, io, *args):
+    def write_io(self, io, *args):
         for arg in args:
             if self.indent_level:
                 io.write(self.indent_level * self.indent_string)
@@ -52,26 +50,26 @@ class CodeGen:
             io.write(b'\n')
     
     def write_file_header(self, io):
-        self.write(
+        self.write_io(
             io,
             '# -*- coding: utf-8 -*-',
         )
 
     def write_class(self, io):
-        self.write(
+        self.write_io(
             io,
             'class ThisTemplate({}):'.format(self.superclass_name),
         )
         self.indent()
 
     def write_imports(self, io):
-        self.write(
+        self.write_io(
             io,
-            *self.imports,
+            *self.imports
         )
 
     def write_template_function(self, io, name):
-        self.write(
+        self.write_io(
             io,
             'def render_{}(self, **kwargs):'.format(name),
         )
@@ -79,14 +77,13 @@ class CodeGen:
 
     def write_structure(self, io):
         code_level = 0
-        self.write_class(io)
         for node in self.structure:
-            if class_level == 0 and not isinstance(node, structure.ModuleLevel):
+            if code_level == 0 and not isinstance(node, structure.ModuleLevel):
                 self.write_class(io)
                 code_level = 1
 
-            if class_level == 1 and not isinstance(node, structure.ClassLevel):
-                self.write_template_function('body')
+            if code_level == 1 and not isinstance(node, structure.ClassLevel):
+                self.write_template_function(io, 'body')
                 code_level = 2
 
     def write(self, io):
