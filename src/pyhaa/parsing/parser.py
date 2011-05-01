@@ -197,17 +197,21 @@ class PyhaaParser(Parser):
         # reindenting
         self.current_opened += 1
 
+    def handle_tas_start(self, match):
+        # Ensures that the last attribute-set is a dict so we can set attributes later
+        self.tree.current.append_attributes(dict())
+
     def handle_tas_name(self, match):
         name = match.group('value')
-        self.tree.current.simple_attributes[name] = True
+        self.tree.current.attributes_set[-1][name] = True
         self.last_tas_name = name
 
     def handle_tas_value(self, match):
-        self.tree.current.simple_attributes[self.last_tas_name] = match.group('value')
+        self.tree.current.attributes_set[-1][self.last_tas_name] = match.group('value')
         self.last_tas_name = None
 
     def handle_tap_rest(self, match):
-        self.tree.current.python_attributes = match
+        self.tree.current.append_attributes(match)
 
     def indent_de(self, times=1):
         '''

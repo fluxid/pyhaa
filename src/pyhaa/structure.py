@@ -77,16 +77,13 @@ class PyhaaElementOpenable(PyhaaParent, PyhaaElement):
 
 
 class Tag(PyhaaElementOpenable):
-    def __init__(self, name = None, id_ = None, classes = None, simple_attributes = None, python_attributes = None, **kwargs):
+    def __init__(self, name = None, id_ = None, classes = None, attributes_set = None, **kwargs):
         self._classes = None
-        self._simple_attributes = None
-        self._python_attributes = None
 
         self.name = name
         self.id_ = id_
         self.classes = classes
-        self.simple_attributes = simple_attributes
-        self.python_attributes = python_attributes
+        self.attributes_set = attributes_set or []
         super().__init__(**kwargs)
 
     def _get_classes(self):
@@ -97,23 +94,11 @@ class Tag(PyhaaElementOpenable):
 
     classes = property(_get_classes, _set_classes)
 
-    def _get_simple_attributes(self):
-        return self._simple_attributes
-
-    def _set_simple_attributes(self, value):
-        self._simple_attributes = dict(value) if value else dict()
-
-    simple_attributes = property(_get_simple_attributes, _set_simple_attributes)
-
-    def _get_python_attributes(self):
-        return self._python_attributes
-
-    def _set_python_attributes(self, value):
-        if not value or value == '{}':
-            value = None
-        self._python_attributes = value
-
-    python_attributes = property(_get_python_attributes, _set_python_attributes)
+    def append_attributes(self, obj):
+        if self.attributes_set and isinstance(obj, dict) and isinstance(self.attributes_set[-1], dict):
+            self.attributes_set[-1].update(obj)
+        else:
+            self.attributes_set.append(obj)
 
 
 class Text(PyhaaElement):
@@ -122,8 +107,11 @@ class Text(PyhaaElement):
         self.escape = escape
         super().__init__(**kwargs)
 
+
 class ModuleLevel:
     pass
 
+
 class ClassLevel:
     pass
+

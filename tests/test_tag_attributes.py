@@ -27,10 +27,28 @@ from unittest import TestCase
 from pyhaa import (
     parse_string,
 )
+from pyhaa.runtime import (
+    merge_element_attributes as mea,
+    prepare_for_tag as pft,
+)
 
 from .helpers import jl
 
 class TestTagAttributes(TestCase):
+    def assertAttributesEqual(self, tag, attributes):
+        _, tag_attributes = pft(None, mea(None, None, (
+            (
+                eval(value)
+                if isinstance(value, str) else
+                value
+            )
+            for value in tag.attributes_set
+        )))
+        self.assertDictEqual(
+            tag_attributes,
+            attributes,
+        )
+
     def test_empty_attributes(self):
         tree = parse_string(jl(
             '%',
@@ -38,12 +56,9 @@ class TestTagAttributes(TestCase):
             '%( \t     ){  \t  }',
         ))
         tag1, tag2, tag3 = tree.children
-        self.assertDictEqual(tag1.simple_attributes, {})
-        self.assertDictEqual(tag2.simple_attributes, {})
-        self.assertDictEqual(tag3.simple_attributes, {})
-        self.assertIs(tag1.python_attributes, None)
-        self.assertIs(tag2.python_attributes, None)
-        self.assertIs(tag3.python_attributes, None)
+        self.assertAttributesEqual(tag1, {})
+        self.assertAttributesEqual(tag2, {})
+        self.assertAttributesEqual(tag3, {})
 
     def test_attributes_names(self):
         # Dirty style but still valid
@@ -52,11 +67,11 @@ class TestTagAttributes(TestCase):
             '%( \t baz\t \t)',
         ))
         tag1, tag2 = tree.children
-        self.assertDictEqual(tag1.simple_attributes, {
+        self.assertAttributesEqual(tag1, {
             'foo': True,
             'bar': True,
         })
-        self.assertDictEqual(tag2.simple_attributes, {
+        self.assertAttributesEqual(tag2, {
             'baz': True,
         })
 
@@ -67,7 +82,7 @@ class TestTagAttributes(TestCase):
             '%( foo_bar-baz \t = \'lol\' \t)( spam = eggs i_feel-great- \t lmao=" rofl\t\'")',
         ))
         tag, = tree.children
-        self.assertDictEqual(tag.simple_attributes, {
+        self.assertAttributesEqual(tag, {
             'foo_bar-baz': 'lol',
             'spam': 'eggs',
             'i_feel-great-': True,
@@ -82,7 +97,7 @@ class TestTagAttributes(TestCase):
             ')',
         ))
         tag, = tree.children
-        self.assertDictEqual(tag.simple_attributes, {
+        self.assertAttributesEqual(tag, {
             'spam': 'eggs',
             'herp': 'derp',
         })
@@ -90,11 +105,12 @@ class TestTagAttributes(TestCase):
     def test_python_attributes(self):
         # Even dirtier
         tree = parse_string(jl(
-            '%{sup:nah}{"at"+"tribute": ("value"*2).upper()}',
+            '%{"sup":"nah"}{"at"+"tribute": ("value"*2).upper()}',
         ))
         tag, = tree.children
-        self.assertDictEqual(eval(tag.python_attributes), {
+        self.assertAttributesEqual(tag, {
             'attribute': 'VALUEVALUE',
+            'sup': 'nah',
         })
 
     def test_python_attributes_multiline(self):
@@ -110,10 +126,10 @@ class TestTagAttributes(TestCase):
         ))
         tag1, = tree.children
         tag2, = tag1.children
-        self.assertDictEqual(eval(tag1.python_attributes), {
+        self.assertAttributesEqual(tag1, {
             'sup': 'nah',
         })
-        self.assertDictEqual(eval(tag2.python_attributes), {
+        self.assertAttributesEqual(tag2, {
             'attribute': 'VALUEVALUE',
         })
     
