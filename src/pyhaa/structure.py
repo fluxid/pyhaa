@@ -68,45 +68,12 @@ class PyhaaElement:
     def append(self, other):
         raise Exception("Can\'t append children to normal element")
 
-    #def get_indent_after(self):
-    #    pass
-
-    #def space_after(self):
-    #    if self.sibling:
-    #        # our outer right and one next to us outer left
-    #        # ...</div><div>...
-    #        return self.ws_out_right and self.sibling.ws_out_left
-    #    if self.parent:
-    #        # our outer right and parent's inner right
-    #        # ...</div></div>
-    #        return self.ws_out_right and self.parent.ws_in_right
-    #    # We have no next sibling and no parent
-    #    return False
-
 
 class PyhaaElementOpenable(PyhaaParent, PyhaaElement):
     def __init__(self, ws_in_left = True, ws_in_right = True, **kwargs):
         self.ws_in_left = ws_in_left
         self.ws_in_right = ws_in_right
         super().__init__(**kwargs)
-
-    #def space_after_opening(self):
-    #    if self.children:
-    #        # We take our inner left and outer left of the first child
-    #        # <div><div>...
-    #        return self.ws_in_left and self.children[0].ws_out_left
-    #    # We're empty, so don't put anything inside
-    #    # <div></div>
-    #    return False
-
-    #def get_indent_after_opening(self):
-    #    return self.get_indent_after()
-
-    #def get_indent_before_closing(self):
-    #    pass
-
-    #def space_after_closing(self):
-    #    return self.space_after()
 
 
 class Tag(PyhaaElementOpenable):
