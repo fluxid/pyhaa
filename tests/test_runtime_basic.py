@@ -66,3 +66,8 @@ class TestRuntimeBasic(TestCase):
             ('x', {'id':'a', 'class':'b c d'})
         )
 
+        self.assertSequenceEqual(
+            pft('z', mea('a', None, [{'id':None}, {'huh':False}])),
+            ('z', {})
+        )
+

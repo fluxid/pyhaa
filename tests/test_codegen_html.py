@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Test code generation
+Test HTML code generation
 '''
 
 # Pyhaa - Templating system for Python 3
@@ -26,44 +26,26 @@ import io
 from unittest import TestCase
 
 from pyhaa import (
-    codegen,
     parse_string,
 )
+from pyhaa.codegen.html import HTMLCodeGen
 
 from .helpers import jl
 
-class TestCodeGen(codegen.CodeGen):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.called_functions = list()
-
-    def call_node_handling_function(self, prefix, node):
-        self.called_functions.append(codegen.name_node_handling_function(prefix, node))
-
-
 class TestBasics(TestCase):
-    def test_decamel(self):
-        self.assertEqual(codegen.decamel('CodeGen'), '_code_gen')
-
     def test_basic_codegen(self):
         tree = parse_string(jl(
             '%a',
-            '  %b',
-            '%c',
+            '  %b to jest jakiś tekst...',
+            '%c(a)',
+            '%br',
+            '%div#im_so_dynamic(value="notlol"){"value":lol, "id":"cool effects of being dynamic"}',
+            '%label',
+            '  This looks cool!',
+            '  %input.text_box(type=text){"value":form.fields[0].value}',
         ))
         bio = io.BytesIO()
-        cg = TestCodeGen(tree, bio)
+        cg = HTMLCodeGen(tree, bio)
         cg.write()
-        bio.getvalue().decode('utf-8')
-        self.assertSequenceEqual(
-            cg.called_functions,
-            [
-                'handle_open_tag',
-                'handle_open_tag',
-                'handle_close_tag',
-                'handle_close_tag',
-                'handle_open_tag',
-                'handle_close_tag',
-            ],
-        )
+        print(bio.getvalue().decode('utf-8'))
 

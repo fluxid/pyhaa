@@ -39,6 +39,14 @@ def decamel(string):
     # We're not removing '_' prefix
     return RE_DECAMEL.sub(_decamel, string)
 
+def name_node_handling_function(prefix, node):
+    return 'handle_' + prefix + decamel(node.__class__.__name__)
+
+def byterepr(value):
+    if isinstance(value, str):
+        return repr(value.encode('utf-8'))
+    return repr(value)
+
 
 class CodeGen:
     superclass_name = 'Template'
@@ -137,7 +145,7 @@ class CodeGen:
     def call_node_handling_function(self, prefix, node):
         if node is None:
             return
-        function_name = 'handle_' + prefix + decamel(node.__class__.__name__)
+        function_name = name_node_handling_function(prefix, node)
         function = getattr(self, function_name, None)
         if function:
             function(node)

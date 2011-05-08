@@ -18,12 +18,12 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-def merge_element_attributes(id_, classes, attribute_set):
+def merge_element_attributes(id_, classes, attributes_set):
     result = {
         'id': id_,
         'class': list(classes) if classes else list(),
     }
-    for obj in attribute_set:
+    for obj in attributes_set:
         result.update(obj)
         classes = result['class']
 
@@ -46,7 +46,7 @@ def merge_element_attributes(id_, classes, attribute_set):
     return result
 
 def prepare_for_tag(name, attributes):
-    name = attributes.pop('_tag_name', name)
+    name = attributes.pop('_tag_name', name) or 'div'
     attributes = {
         key: (
             ' '.join(value)
@@ -56,8 +56,12 @@ def prepare_for_tag(name, attributes):
         for key, value in attributes.items()
         if not (
             key.startswith('_') or
-            (key in ('id', 'class') and not value)
+            (key in ('id', 'class') and not value) or
+            value in (None, False)
         )
     }
     return name, attributes
+
+class Template:
+    pass
 
