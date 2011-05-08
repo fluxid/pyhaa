@@ -29,9 +29,11 @@ class CodeGen:
         'from pyhaa.runtime import Template',
     )
 
-    def __init__(self, structure, indent_string=DEFAULT_INDENT, newline=DEFAULT_NEWLINE):
+    def __init__(self, structure, io, indent_string=DEFAULT_INDENT, newline=DEFAULT_NEWLINE):
         self.structure = structure
+        self.io = io
         self.indent_string = indent_string.encode('utf-8')
+        self.newline = newline.encode('utf-8')
 
         self.indent_level = 0
 
@@ -42,51 +44,52 @@ class CodeGen:
         if self.indent_level and times:
             self.indent_level -= min(times, self.indent_level)
 
-    def write_io(self, io, *args):
+    def write_io(self, *args):
         for arg in args:
             if self.indent_level:
-                io.write(self.indent_level * self.indent_string)
-            io.write(arg.encode('utf-8'))
-            io.write(b'\n')
+                self.io.write(self.indent_level * self.indent_string)
+            self.io.write(arg.encode('utf-8'))
+            self.io.write(self.newline)
     
-    def write_file_header(self, io):
+    def write_file_header(self):
         self.write_io(
-            io,
             '# -*- coding: utf-8 -*-',
         )
 
-    def write_class(self, io):
+    def write_class(self):
         self.write_io(
-            io,
             'class ThisTemplate({}):'.format(self.superclass_name),
         )
         self.indent()
 
-    def write_imports(self, io):
+    def write_imports(self):
         self.write_io(
-            io,
             *self.imports
         )
 
-    def write_template_function(self, io, name):
+    def write_template_function(self, name):
         self.write_io(
-            io,
             'def render_{}(self, **kwargs):'.format(name),
         )
         self.indent()
 
-    def write_structure(self, io):
+    def write_node(self, node):
+        raise NotImplementedError
+
+    def write_structure(self):
         code_level = 0
         for node in self.structure:
             if code_level == 0 and not isinstance(node, structure.ModuleLevel):
-                self.write_class(io)
+                self.write_class()
                 code_level = 1
 
             if code_level == 1 and not isinstance(node, structure.ClassLevel):
-                self.write_template_function(io, 'body')
+                self.write_template_function('body')
                 code_level = 2
 
-    def write(self, io):
-        self.write_file_header(io)
-        self.write_imports(io)
-        self.write_structure(io)
+            self.write_node(node)
+
+    def write(self):
+        self.write_file_header()
+        self.write_imports()
+        self.write_structure()

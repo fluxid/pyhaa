@@ -32,15 +32,22 @@ from pyhaa import (
 
 from .helpers import jl
 
+class TestCodeGen(codegen.CodeGen):
+    def write_node(self, node):
+        '''
+        Don't throw exception, just pass
+        '''
+        pass
+
 class TestBasics(TestCase):
-    def test_codegen(self):
+    def test_basic_codegen(self):
         tree = parse_string(jl(
             '%a',
             '  %b',
             '%c',
         ))
-        cg = codegen.CodeGen(tree)
         bio = io.BytesIO()
-        cg.write(bio)
+        cg = TestCodeGen(tree, bio)
+        cg.write()
         bio.getvalue().decode('utf-8')
 
