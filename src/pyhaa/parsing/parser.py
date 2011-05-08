@@ -30,7 +30,7 @@ from .errors import (
 from .lexer import pyhaa_lexer
 
 from ..structure import (
-    PyhaaElementOpenable,
+    PyhaaParentNode,
     PyhaaParent,
     PyhaaTree,
     Tag,
@@ -228,7 +228,7 @@ class PyhaaParser(Parser):
         '''
         Indented line
         '''
-        if not isinstance(self.tree.current, PyhaaElementOpenable):
+        if not isinstance(self.tree.current, PyhaaParentNode):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.UNEXPECTED_INDENT,
                 self,

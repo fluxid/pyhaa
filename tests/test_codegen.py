@@ -32,14 +32,10 @@ from pyhaa import (
 
 from .helpers import jl
 
-class TestCodeGen(codegen.CodeGen):
-    def write_node(self, node):
-        '''
-        Don't throw exception, just pass
-        '''
-        pass
-
 class TestBasics(TestCase):
+    def test_decamel(self):
+        self.assertEqual(codegen.decamel('CodeGen'), '_code_gen')
+
     def test_basic_codegen(self):
         tree = parse_string(jl(
             '%a',
@@ -47,7 +43,7 @@ class TestBasics(TestCase):
             '%c',
         ))
         bio = io.BytesIO()
-        cg = TestCodeGen(tree, bio)
+        cg = codegen.CodeGen(tree, bio)
         cg.write()
         bio.getvalue().decode('utf-8')
 

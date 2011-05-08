@@ -18,6 +18,8 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+# Base classes
+
 class PyhaaParent:
     def __init__(self, **kwargs):
         self.children = list()
@@ -36,6 +38,12 @@ class PyhaaParent:
     
     def __iter__(self):
         return iter(self.children)
+
+    def __repr__(self):
+        return '<{} {} children>'.format(
+            self.__class__.__name__,
+            len(self.children),
+        )
 
 
 class PyhaaTree(PyhaaParent):
@@ -56,7 +64,7 @@ class PyhaaTree(PyhaaParent):
                 self.current = self.current.parent
 
 
-class PyhaaElement:
+class PyhaaNode:
     def __init__(self, ws_out_left = True, ws_out_right = True):
         self.parent = None
         self.root = None
@@ -68,15 +76,37 @@ class PyhaaElement:
     def append(self, other):
         raise Exception("Can\'t append children to normal element")
 
+    def __repr__(self):
+        return '<{}>'.format(
+            self.__class__.__name__,
+        )
 
-class PyhaaElementOpenable(PyhaaParent, PyhaaElement):
+
+class PyhaaParentNode(PyhaaParent, PyhaaNode):
     def __init__(self, ws_in_left = True, ws_in_right = True, **kwargs):
         self.ws_in_left = ws_in_left
         self.ws_in_right = ws_in_right
         super().__init__(**kwargs)
 
 
-class Tag(PyhaaElementOpenable):
+class ModuleLevel:
+    '''
+    Allows node to be on a module level (i.e. module-level code like import)
+    '''
+    pass
+
+
+class ClassLevel:
+    '''
+    Allows node to be on a class module (i.e. helper function)
+    '''
+    pass
+
+
+# Node types
+
+
+class Tag(PyhaaParentNode):
     def __init__(self, name = None, id_ = None, classes = None, attributes_set = None, **kwargs):
         self._classes = None
 
@@ -100,18 +130,23 @@ class Tag(PyhaaElementOpenable):
         else:
             self.attributes_set.append(obj)
 
+    def __repr__(self):
+        return '<{} {} {} children>'.format(
+            self.__class__.__name__,
+            repr(self.name),
+            len(self.children),
+        )
 
-class Text(PyhaaElement):
+
+class Text(PyhaaNode):
     def __init__(self, text = None, escape = True, **kwargs):
         self.text = text
         self.escape = escape
         super().__init__(**kwargs)
 
-
-class ModuleLevel:
-    pass
-
-
-class ClassLevel:
-    pass
+    def __repr__(self):
+        return '<{} {}>'.format(
+            self.__class__.__name__,
+            repr(self.text),
+        )
 

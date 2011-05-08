@@ -18,10 +18,27 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from .. import structure
+import logging
+import re
+
+from .. import (
+    structure,
+    utils,
+)
 
 DEFAULT_INDENT = '    '
 DEFAULT_NEWLINE = '\n'
+
+RE_DECAMEL = re.compile('[A-Z]')
+
+log = logging.getLogger(__name__)
+
+def decamel(string):
+    def _decamel(match):
+        return '_' + match.group(0).lower()
+    # We're not removing '_' prefix
+    return RE_DECAMEL.sub(_decamel, string)
+
 
 class CodeGen:
     superclass_name = 'Template'
@@ -73,8 +90,31 @@ class CodeGen:
         )
         self.indent()
 
-    def write_node(self, node):
-        raise NotImplementedError
+    def write_root_node(self, node):
+        # In this case as "root node" we mean node which has tree root as parent
+        iter_stack = list()
+        node_stack = list()
+        current_iter = utils.one_iter(node)
+
+        while True:
+            node = next(current_iter, None)
+            if node is None:
+                if node_stack:
+                    self.call_node_handling_function('close', node_stack.pop())
+                if not iter_stack:
+                    while node_stack:
+                        self.call_node_handling_function('close', node_stack.pop())
+                    break
+                current_iter = iter_stack.pop()
+                continue
+
+            self.call_node_handling_function('open', node)
+            if isinstance(node, structure.PyhaaParent):
+                node_stack.append(node)
+                iter_stack.append(current_iter)
+                current_iter = iter(node)
+            else:
+                self.call_node_handling_function('close', node)
 
     def write_structure(self):
         code_level = 0
@@ -87,9 +127,20 @@ class CodeGen:
                 self.write_template_function('body')
                 code_level = 2
 
-            self.write_node(node)
+            self.write_root_node(node)
 
     def write(self):
         self.write_file_header()
         self.write_imports()
         self.write_structure()
+
+    def call_node_handling_function(self, prefix, node):
+        if node is None:
+            return
+        function_name = 'handle_' + prefix + decamel(node.__class__.__name__)
+        function = getattr(self, function_name, None)
+        if function:
+            function(node)
+        else:
+            log.warning("Couldn't find function %s for node %r.", function_name, node)
+

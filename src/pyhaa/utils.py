@@ -154,3 +154,6 @@ entity_decode = dict_sub(ENTITIES_DECODE, RE_ENTITIES_ENCODE, 1)
 entity_encode = dict_sub(ENTITIES_ENCODE)
 
 
+def one_iter(value):
+    yield value
+
