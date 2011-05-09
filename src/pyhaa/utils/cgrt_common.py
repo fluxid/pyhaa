@@ -40,24 +40,24 @@ def prepare_for_tag(name, id_, classes, attributes_set, do_byte_encode = False, 
 
     # /r/ing better idea, because this one sucks a bit
     if do_byte_encode:
-        x_tag_name = b'_tag_name'
-        x_div = b'div'
-        x_space = b' '
-        x_class = b'class'
-        x_id = b'id'
         x_ = b'_'
         x_append_class = b'_append_class'
+        x_class = b'class'
+        x_div = b'div'
+        x_id = b'id'
         x_remove_class = b'_remove_class'
+        x_sp = b' '
+        x_tag_name = b'_tag_name'
         x_type = bytes
     else:
-        x_tag_name = '_tag_name'
-        x_div = 'div'
-        x_space = ' '
-        x_class = 'class'
-        x_id = 'id'
         x_ = '_'
         x_append_class = '_append_class'
+        x_class = 'class'
+        x_div = 'div'
+        x_id = 'id'
         x_remove_class = '_remove_class'
+        x_sp = ' '
+        x_tag_name = '_tag_name'
         x_type = str
 
     result = {
@@ -84,7 +84,7 @@ def prepare_for_tag(name, id_, classes, attributes_set, do_byte_encode = False, 
                 if class_ in classes:
                     classes.remove(class_)
 
-    name = result.pop(x_tag_name, None) or x_div
+    name = result.pop(x_tag_name, name) or x_div
     attributes = {
         key: (
             x_sp.join(value)

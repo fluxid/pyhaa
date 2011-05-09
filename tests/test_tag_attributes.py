@@ -27,8 +27,7 @@ from unittest import TestCase
 from pyhaa import (
     parse_string,
 )
-from pyhaa.runtime import (
-    merge_element_attributes as mea,
+from pyhaa.utils.cgrt_common import (
     prepare_for_tag as pft,
 )
 
@@ -36,14 +35,14 @@ from .helpers import jl
 
 class TestTagAttributes(TestCase):
     def assertAttributesEqual(self, tag, attributes):
-        _, tag_attributes = pft(None, mea(None, None, (
+        _, tag_attributes = pft(None, None, None, (
             (
                 eval(value)
                 if isinstance(value, str) else
                 value
             )
             for value in tag.attributes_set
-        )))
+        ))
         self.assertDictEqual(
             tag_attributes,
             attributes,

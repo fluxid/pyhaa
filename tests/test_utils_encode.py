@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+'''
+Utility testing
+'''
+
 # Pyhaa - Templating system for Python 3
 # Copyright (c) 2011 Tomasz Kowalczyk
 # Contact e-mail: code@fluxid.pl
@@ -18,27 +22,20 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from ..utils.cgrt_common import (
-    close_tag,
-    open_tag,
-    prepare_for_tag,
-)
+from unittest import TestCase
 
-from . import Template
+from pyhaa.utils import encode
 
+class TestEntities(TestCase):
+    def test_encoding_basic(self):
+        self.assertEqual(
+            encode.entity_encode('<a href="#">\'oh&nbsp;wow\'</a>'),
+            '&lt;a href=&quot;#&quot;&gt;&apos;oh&amp;nbsp;wow&apos;&lt;/a&gt;'
+        )
 
-class HTMLTemplate(Template):
-    encoding = 'utf-8'
-
-    def __init__(self, *args, **kwargs):
-        self.tag_name_stack = list()
-
-    def open_tag(self, name, id_, classes, attributes, self_close):
-        name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, self.encoding)
-        if not self_close:
-            self.tag_name_stack.append(name)
-        return open_tag(name, attributes, self_close)
-
-    def close_tag(self):
-        return close_tag(self.tag_name_stack.pop())
+    def test_decoding_basic(self):
+        self.assertEqual(
+            encode.entity_decode('&lt;a href=&quot;#&quot;&gt;&apos;oh&amp;nbsp;wow&apos;&lt;/a&gt;'),
+            '<a href="#">\'oh&nbsp;wow\'</a>',
+        )
 

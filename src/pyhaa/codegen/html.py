@@ -24,6 +24,8 @@ from ..utils.cgrt_common import (
     prepare_for_tag,
 )
 
+from ..utils.encode import single_encode
+
 from . import CodeGen
 
 class HTMLCodeGen(CodeGen):
@@ -92,7 +94,7 @@ class HTMLCodeGen(CodeGen):
         return not node.attributes_set or len(node.attributes_set) == 1 and not isinstance(node.attributes_set[0], str)
 
     def open_tag(self, name, id_, classes, attributes, self_close):
-        name, attributes = prepare_for_tag(name, id_, classes, attributes)
+        name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, self.encoding)
         self.write_simple_bytes(
             b''.join(open_tag(
                 name,
@@ -126,8 +128,8 @@ class HTMLCodeGen(CodeGen):
                     self.byterepr(node.classes or None),
                     '[{}]'.format(', '.join((
                         (attributes if isinstance(attributes, str) else repr({
-                            single_encode(key.encode, True, True, self.encoding):
-                            single_encode(value.encode, True, True, self.encoding)
+                            single_encode(key, True, True, self.encoding):
+                            single_encode(value, True, True, self.encoding)
                             for key, value in attributes.items()
                         })).strip()
                         for attributes in node.attributes_set
