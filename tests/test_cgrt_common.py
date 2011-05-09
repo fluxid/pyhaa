@@ -28,16 +28,28 @@ from pyhaa.utils.cgrt_common import (
     prepare_for_tag as pft,
 )
 
+def so(value):
+    # reorder as would set do
+    return ' '.join(set(value.split(' ')))
+
 class TestRuntimeBasic(TestCase):
     
-    def test_prepare_for_tag(self):
+    def test_prepare_for_tag_basic(self):
+        self.assertSequenceEqual(
+            pft('a', None, None, []),
+            ('a', {})
+        )
+        self.assertSequenceEqual(
+            pft('a', None, None, [{'_tag_name':'b'}]),
+            ('b', {})
+        )
         self.assertSequenceEqual(
             pft('z', 'a', 'b', []),
             ('z', {'id':'a', 'class':'b'})
         )
         self.assertSequenceEqual(
-            pft('a', None, None, [{'_tag_name':'b'}]),
-            ('b', {})
+            pft('z', 'a', ['b', 'c'], []),
+            ('z', {'id':'a', 'class':so('b c')})
         )
         self.assertSequenceEqual(
             pft('b', None, None, [{'id':'', 'class':[]}]),
@@ -45,18 +57,46 @@ class TestRuntimeBasic(TestCase):
         )
         self.assertSequenceEqual(
             pft('a', None, None, [{'class':'a b'}]),
-            ('a', {'class':'a b'})
+            ('a', {'class':so('a b')})
         )
         self.assertSequenceEqual(
             pft('a', None, ['z'], [{'class':['a', 'b']}]),
-            ('a', {'class':'a b'})
+            ('a', {'class':so('a b')})
         )
         self.assertSequenceEqual(
-            pft('z', 'a', ['b', 'c'], [{'_append_class':'d'}, {'_tag_name':'x'}]),
-            ('x', {'id':'a', 'class':'b c d'})
+            pft('z', 'a', ['b', 'c'], [{'id':'y', '_append_class':'d'}, {'_tag_name':'x'}]),
+            ('x', {'id':'y', 'class':so('b c d')})
         )
         self.assertSequenceEqual(
-            pft('z', 'a', None, [{'id':None}, {'huh':False}]),
+            pft('z', None, ['b', 'c'], [{'_append_class':'d e'}]),
+            ('z', {'class':so('b c d e')})
+        )
+        self.assertSequenceEqual(
+            pft('z', None, ['b', 'c'], [{'_append_class':'d e'}, {'_remove_class':'d'}]),
+            ('z', {'class':so('b c e')})
+        )
+        self.assertSequenceEqual(
+            pft('z', None, ['b', 'c'], [{'_append_class':['d', 'e']}]),
+            ('z', {'class':so('b c d e')})
+        )
+        self.assertSequenceEqual(
+            pft('z', None, ['b', 'c'], [{'_append_class':['d', 'e']}, {'_remove_class':'d'}]),
+            ('z', {'class':so('b c e')})
+        )
+        self.assertSequenceEqual(
+            pft('z', None, ['b', 'c'], [{'_remove_class':'c'}]),
+            ('z', {'class':'b'})
+        )
+        self.assertSequenceEqual(
+            pft('z', None, ['b', 'c'], [{'_remove_class':'d'}]),
+            ('z', {'class':so('b c')})
+        )
+        self.assertSequenceEqual(
+            pft('z', None, ['b', 'c', 'd'], [{'_remove_class':'c d'}]),
+            ('z', {'class':'b'})
+        )
+        self.assertSequenceEqual(
+            pft('z', 'a', None, [{'id':None, 'heh':None}, {'huh':False}]),
             ('z', {})
         )
 

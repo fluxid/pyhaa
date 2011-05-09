@@ -60,45 +60,50 @@ def prepare_for_tag(name, id_, classes, attributes_set, do_byte_encode = False, 
         x_tag_name = '_tag_name'
         x_type = str
 
-    result = {
-        x_id: id_,
-        x_class: list(classes) if classes else list(),
-    }
+    def class_split_set(value):
+        if value and isinstance(value, x_type):
+            value = (
+                sval
+                for sval in value.split(x_sp)
+                if sval
+            )
+        return set(value) if value else set()
+
+    result = dict()
+    classes = class_split_set(classes)
+
     for obj in attributes_set:
-        result.update(obj)
-        classes = result[x_class]
+        if x_class in obj:
+            classes = class_split_set(obj.pop(x_class, None))
+
+        id_ = obj.pop(x_id, id_)
+        name = obj.pop(x_tag_name, name)
+
+        result.update((
+            (key, value)
+            for key, value in obj.items()
+            if not (
+                key.startswith(x_) or
+                value in (False, None)
+            )
+        ))
 
         append = obj.get(x_append_class)
         if append:
-            if isinstance(append, x_type):
-                append = [append]
-            for class_ in append:
-                if not class_ in classes:
-                    classes.append(class_)
+            classes |= class_split_set(append)
 
         remove = obj.get(x_remove_class)
         if remove:
-            if isinstance(remove, x_type):
-                remove = [remove]
-            for class_ in remove:
-                if class_ in classes:
-                    classes.remove(class_)
+            classes -= class_split_set(remove)
 
-    name = result.pop(x_tag_name, name) or x_div
-    attributes = {
-        key: (
-            x_sp.join(value)
-            if (key == x_class and not isinstance(value, x_type)) else
-            value
-        )
-        for key, value in result.items()
-        if not (
-            key.startswith(x_) or
-            (key in (x_id, x_class) and not value) or
-            value in (None, False)
-        )
-    }
-    return name, attributes
+    if classes:
+        result[x_class] = x_sp.join(classes)
+
+    if id_:
+        result[x_id] = id_
+
+    name = name or x_div
+    return name, result
 
 def open_tag(name, attributes, self_close):
     yield b'<'
