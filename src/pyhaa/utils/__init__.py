@@ -23,35 +23,6 @@ from functools import wraps
 from itertools import count
 import re
 
-# TODO
-# I don't have access to internet now so I won't list all entities here
-ENTITIES_DECODE = {
-    'amp': '&',
-    'quot': '"',
-    'apos': "'",
-    'lt': '<',
-    'gt': '>',
-}
-RE_ENTITIES_ENCODE = re.compile('&([^\s;&]+);')
-
-_ENCODEABLE = '&\'"<>'
-_ENTITIES_ENCODE = {
-    value: key
-    for key, value in ENTITIES_DECODE.items()
-}
-ENTITIES_ENCODE = {
-    character: (
-        '&#{};'.format(ord(character))
-        if entity is None else
-        '&{};'.format(entity)
-    )
-    for character, entity in (
-        (character, _ENTITIES_ENCODE.get(character))
-        for character in _ENCODEABLE
-    )
-}
-del _ENTITIES_ENCODE, _ENCODEABLE
-
 
 class DescEnum:
     __slots__ = ('to_desc', 'to_name', 'to_value')
@@ -146,13 +117,6 @@ def dict_sub(dict_, regex=None, group_id=None):
         return regex.sub(match_sub, value, *args, **kwargs)
 
     return replacer
-
-
-entity_decode = dict_sub(ENTITIES_DECODE, RE_ENTITIES_ENCODE, 1)
-
-
-entity_encode = dict_sub(ENTITIES_ENCODE)
-
 
 def one_iter(value):
     yield value

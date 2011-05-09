@@ -42,11 +42,6 @@ def decamel(string):
 def name_node_handling_function(prefix, node):
     return 'handle_' + prefix + decamel(node.__class__.__name__)
 
-def byterepr(value):
-    if isinstance(value, str):
-        return repr(value.encode('utf-8'))
-    return repr(value)
-
 
 class CodeGen:
     superclass_name = 'Template'
@@ -54,11 +49,12 @@ class CodeGen:
         'from pyhaa.runtime import Template',
     )
 
-    def __init__(self, structure, io, indent_string=DEFAULT_INDENT, newline=DEFAULT_NEWLINE):
+    def __init__(self, structure, io, indent_string=DEFAULT_INDENT, newline=DEFAULT_NEWLINE, encoding='utf-8'):
         self.structure = structure
         self.io = io
-        self.indent_string = indent_string.encode('utf-8')
-        self.newline = newline.encode('utf-8')
+        self.indent_string = indent_string.encode(encoding)
+        self.newline = newline.encode(encoding)
+        self.encoding = encoding
 
         self.indent_level = 0
 
@@ -73,12 +69,12 @@ class CodeGen:
         for arg in args:
             if self.indent_level:
                 self.io.write(self.indent_level * self.indent_string)
-            self.io.write(arg.encode('utf-8'))
+            self.io.write(arg.encode(self.encoding))
             self.io.write(self.newline)
     
     def write_file_header(self):
         self.write_io(
-            '# -*- coding: utf-8 -*-',
+            '# -*- coding: {} -*-'.format(self.encoding),
         )
 
     def write_class(self):
@@ -86,6 +82,10 @@ class CodeGen:
             'class ThisTemplate({}):'.format(self.superclass_name),
         )
         self.indent()
+        self.write_io(
+            'encoding = {}'.format(repr(self.encoding)),
+            '',
+        )
 
     def write_imports(self):
         self.write_io(

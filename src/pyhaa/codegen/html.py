@@ -18,15 +18,13 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from . import (
-    byterepr,
-    CodeGen,
-)
-from ..runtime import (
-    html,
-    merge_element_attributes,
+from ..utils.cgrt_common import (
+    close_tag,
+    open_tag,
     prepare_for_tag,
 )
+
+from . import CodeGen
 
 class HTMLCodeGen(CodeGen):
     superclass_name = 'HTMLTemplate'
@@ -94,9 +92,9 @@ class HTMLCodeGen(CodeGen):
         return not node.attributes_set or len(node.attributes_set) == 1 and not isinstance(node.attributes_set[0], str)
 
     def open_tag(self, name, id_, classes, attributes, self_close):
-        name, attributes = prepare_for_tag(name, merge_element_attributes(id_, classes, attributes))
+        name, attributes = prepare_for_tag(name, id_, classes, attributes)
         self.write_simple_bytes(
-            b''.join(html.open_tag(
+            b''.join(open_tag(
                 name,
                 attributes,
                 self_close,
@@ -107,7 +105,7 @@ class HTMLCodeGen(CodeGen):
 
     def close_tag(self):
         self.write_simple_bytes(
-            b''.join(html.close_tag(self.tag_name_stack.pop())),
+            b''.join(close_tag(self.tag_name_stack.pop())),
         )
 
     def handle_open_tag(self, node):
@@ -123,17 +121,18 @@ class HTMLCodeGen(CodeGen):
         else:
             self.write_io(
                 'yield self.open_tag({}, {}, {}, {}, {})'.format(
-                    byterepr(node.name),
-                    byterepr(node.id_),
-                    byterepr(node.classes or None),
+                    self.byterepr(node.name),
+                    self.byterepr(node.id_),
+                    self.byterepr(node.classes or None),
                     '[{}]'.format(', '.join((
                         (attributes if isinstance(attributes, str) else repr({
-                            key.encode('utf-8'): value.encode('utf-8')
+                            single_encode(key.encode, True, True, self.encoding):
+                            single_encode(value.encode, True, True, self.encoding)
                             for key, value in attributes.items()
                         })).strip()
                         for attributes in node.attributes_set
                     ))),
-                    byterepr(self_close),
+                    self.byterepr(self_close),
                 ),
             )
 
@@ -151,4 +150,7 @@ class HTMLCodeGen(CodeGen):
         self.write_simple_bytes(
             node.text.encode('utf-8'),
         )
+
+    def byterepr(self, value):
+        return repr(single_encode(value, True, True, self.encoding))
 
