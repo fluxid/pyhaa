@@ -55,6 +55,31 @@ class HTMLCodeGen(CodeGen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tag_name_stack = list()
+        self.simple_bytes = list()
+        self.simple_bytes_indent_level = self.indent_level
+
+    def write_simple_bytes(self, *args):
+        if self.simple_bytes_indent_level != self.indent_level:
+            self.flush_simple_bytes()
+            self.simple_bytes_indent_level = self.indent_level
+        self.simple_bytes.extend(args)
+
+    def flush_simple_bytes(self):
+        if self.simple_bytes:
+            self.write_io(
+                'yield {}'.format(repr(b''.join(self.simple_bytes))),
+                flush_simple_bytes = False
+            )
+            del self.simple_bytes[::]
+
+    def write_io(self, *args, flush_simple_bytes = True):
+        if flush_simple_bytes:
+            self.flush_simple_bytes()
+        return super().write_io(*args)
+
+    def write(self, *args, **kwargs):
+        super().write(*args, **kwargs)
+        self.flush_simple_bytes()
 
     def tag_is_self_closing(self, node):
         if node.name in self.void_tags:
@@ -70,19 +95,19 @@ class HTMLCodeGen(CodeGen):
 
     def open_tag(self, name, id_, classes, attributes, self_close):
         name, attributes = prepare_for_tag(name, merge_element_attributes(id_, classes, attributes))
-        self.write_io(
-            "yield {}".format(repr(b''.join(html.open_tag(
+        self.write_simple_bytes(
+            b''.join(html.open_tag(
                 name,
                 attributes,
                 self_close,
-            )))),
+            )),
         )
         if not self_close:
             self.tag_name_stack.append(name)
 
     def close_tag(self):
-        self.write_io(
-            "yield {}".format(repr(b''.join(html.close_tag(self.tag_name_stack.pop())))),
+        self.write_simple_bytes(
+            b''.join(html.close_tag(self.tag_name_stack.pop())),
         )
 
     def handle_open_tag(self, node):
@@ -103,7 +128,7 @@ class HTMLCodeGen(CodeGen):
                     byterepr(node.classes or None),
                     '[{}]'.format(', '.join((
                         (attributes if isinstance(attributes, str) else repr({
-                            byterepr(key): byterepr(value)
+                            key.encode('utf-8'): value.encode('utf-8')
                             for key, value in attributes.items()
                         })).strip()
                         for attributes in node.attributes_set
@@ -123,7 +148,7 @@ class HTMLCodeGen(CodeGen):
             )
 
     def handle_open_text(self, node):
-        self.write_io(
-            'yield {}'.format(byterepr(node.text)),
+        self.write_simple_bytes(
+            node.text.encode('utf-8'),
         )
 

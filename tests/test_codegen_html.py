@@ -29,6 +29,7 @@ from pyhaa import (
     parse_string,
 )
 from pyhaa.codegen.html import HTMLCodeGen
+from pyhaa.utils import iter_flatten
 
 from .helpers import jl
 
@@ -42,10 +43,19 @@ class TestBasics(TestCase):
             '%div#im_so_dynamic(value="notlol"){"value":lol, "id":"cool effects of being dynamic"}',
             '%label',
             '  This looks cool!',
-            '  %input.text_box(type=text){"value":form.fields[0].value}',
+            '  %input.text_box(type=text){"value":field_value}',
         ))
         bio = io.BytesIO()
         cg = HTMLCodeGen(tree, bio)
         cg.write()
-        print(bio.getvalue().decode('utf-8'))
+        code = bio.getvalue().decode('utf-8')
+        print(code)
+        globals_ = dict(
+            lol = 'lol',
+            field_value = 'zażółć gęślą jaźń',
+        )
+        locals_ = dict()
+        exec(code, globals_, locals_)
+        template = locals_['ThisTemplate']
+        print(b''.join(iter_flatten(template().render_body())).decode('utf-8'))
 

@@ -157,3 +157,22 @@ entity_encode = dict_sub(ENTITIES_ENCODE)
 def one_iter(value):
     yield value
 
+def iter_flatten(generator):
+    iter_stack = list()
+    current_iter = generator
+    while True:
+        try:
+            result = next(current_iter)
+        except StopIteration:
+            if not iter_stack:
+                break
+            current_iter = iter_stack.pop()
+            continue
+
+        if hasattr(result, '__next__'):
+            iter_stack.append(current_iter)
+            current_iter = result
+            continue
+
+        yield result
+        

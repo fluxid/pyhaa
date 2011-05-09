@@ -18,6 +18,8 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import types
+
 from ..utils import entity_encode
 
 from . import (
@@ -56,6 +58,7 @@ def close_tag(name):
     yield selective_encode(name)
     yield b'>'
 
+
 class HTMLTemplate(Template):
     def __init__(self, *args, **kwargs):
         self.tag_name_stack = list()
@@ -64,7 +67,7 @@ class HTMLTemplate(Template):
         name, attributes = prepare_for_tag(name, merge_element_attributes(id_, classes, attributes))
         if not self_close:
             self.tag_name_stack.append(name)
-        return open_tag(name, attributes)
+        return open_tag(name, attributes, self_close)
 
     def close_tag(self):
         return close_tag(self.tag_name_stack.pop())
