@@ -118,3 +118,18 @@ class TestText(TestCase):
         self.assertTrue(isinstance(text1, Text))
         self.assertEqual(text1.text, 'foo bar')
 
+    def test_escape_toggle(self):
+        tree = parse_string(jl(
+            '&amp;',
+            '?&amp;',
+            '?&amp;',
+            '&amp;',
+        ))
+        text1, text2, text3 = tree
+        self.assertEqual(text1.escape, True)
+        self.assertEqual(text2.escape, False)
+        self.assertEqual(text3.escape, True)
+        self.assertEqual(text1.text, '&')
+        self.assertEqual(text2.text, '&amp; &amp;')
+        self.assertEqual(text3.text, '&')
+

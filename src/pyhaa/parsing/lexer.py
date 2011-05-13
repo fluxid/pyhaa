@@ -55,6 +55,7 @@ pyhaa_lexer = dict(
         match = (
             'comment',
             'tag_start',
+            'html_escape_toggle',
             'escape',
             'text',
         ),
@@ -66,6 +67,10 @@ pyhaa_lexer = dict(
     text = dict(
         match = MRE('(?P<value>.+?)[ \t]*$'),
         after = 'line_end',
+    ),
+    html_escape_toggle = dict(
+        match = MRE('\?\s*'),
+        after = 'element',
     ),
     tag_start = dict(
         match = (

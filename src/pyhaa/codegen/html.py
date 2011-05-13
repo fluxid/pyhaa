@@ -18,12 +18,12 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+from  .. import structure
 from ..utils.cgrt_common import (
     close_tag,
     open_tag,
     prepare_for_tag,
 )
-
 from ..utils.encode import single_encode
 
 from . import CodeGen
@@ -57,6 +57,11 @@ class HTMLCodeGen(CodeGen):
         self.tag_name_stack = list()
         self.simple_bytes = list()
         self.simple_bytes_indent_level = self.indent_level
+        self.last_was_text = False
+
+    def call_node_handling_function(self, prefix, node):
+        super().call_node_handling_function(prefix, node)
+        self.last_was_text = isinstance(node, structure.Text)
 
     def write_simple_bytes(self, *args):
         if self.simple_bytes_indent_level != self.indent_level:
@@ -149,8 +154,12 @@ class HTMLCodeGen(CodeGen):
             )
 
     def handle_open_text(self, node):
+        if self.last_was_text:
+            self.write_simple_bytes(
+                b' ',
+            )
         self.write_simple_bytes(
-            node.text.encode('utf-8'),
+            single_encode(node.text, True, node.escape, self.encoding),
         )
 
     def byterepr(self, value):

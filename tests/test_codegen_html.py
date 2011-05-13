@@ -49,7 +49,7 @@ class TestBasics(TestCase):
         cg = HTMLCodeGen(tree, bio)
         cg.write()
         code = bio.getvalue().decode('utf-8')
-        print(code)
+        #print(code)
         globals_ = dict(
             lol = 'lol',
             field_value = 'zażółć gęślą jaźń',
@@ -57,5 +57,44 @@ class TestBasics(TestCase):
         locals_ = dict()
         exec(code, globals_, locals_)
         template = locals_['ThisTemplate']
-        print(b''.join(iter_flatten(template().render_body())).decode('utf-8'))
+        #print(b''.join(iter_flatten(template().render_body())).decode('utf-8'))
+
+    def test_html_encode_toggle_and_text(self):
+        tree = parse_string(jl(
+            '&',
+            '?&',
+            '?&amp;',
+            '&amp;',
+        ))
+        bio = io.BytesIO()
+        cg = HTMLCodeGen(tree, bio)
+        cg.write()
+        code = bio.getvalue()
+        globals_ = dict()
+        locals_ = dict()
+        exec(code, globals_, locals_)
+        template = locals_['ThisTemplate']
+        rendered = b''.join(iter_flatten(template().render_body())).decode('utf-8')
+        self.assertEqual(
+            rendered,
+            '&amp; & &amp; &amp;',
+        )
+
+    def test_html_encode_toggle_and_text(self):
+        tree = parse_string(jl(
+            'Zażółć gęślą jaźń',
+        ))
+        bio = io.BytesIO()
+        cg = HTMLCodeGen(tree, bio, encoding='iso-8859-2')
+        cg.write()
+        code = bio.getvalue()
+        globals_ = dict()
+        locals_ = dict()
+        exec(code, globals_, locals_)
+        template = locals_['ThisTemplate']
+        rendered = b''.join(iter_flatten(template().render_body())).decode('iso-8859-2')
+        self.assertEqual(
+            rendered,
+            'Zażółć gęślą jaźń',
+        )
 

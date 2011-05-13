@@ -37,6 +37,8 @@ from ..structure import (
     Text,
 )
 
+from ..utils.encode import entity_decode
+
 #log = logging.getLogger(__name__)
 
 
@@ -53,12 +55,15 @@ class PyhaaParser(Parser):
 
         self.last_tas_name = None
         self.creating_tag = False
+        self.escape_next = True
 
     def token_match(self, token, match):
         super().token_match(token, match)
         func = getattr(self, 'handle_' + token, None)
         if func:
             func(match)
+        if token != 'html_escape_toggle':
+            self.escape_next = True
 
     def on_bad_token(self):
         raise PyhaaSyntaxError(SYNTAX_INFO.SYNTAX_ERROR, self)
@@ -185,14 +190,18 @@ class PyhaaParser(Parser):
 
     def handle_text(self, match):
         text = match.group('value')
+        if self.escape_next:
+            # We escape text, but decode entities/unsescape first,
+            # we will escape it again at codegen level
+            text = entity_decode(text)
         if isinstance(self.tree.current, PyhaaParent):
             children = self.tree.current.children
             if children:
                 last_one = children[-1]
-                if isinstance(last_one, Text):
+                if isinstance(last_one, Text) and last_one.escape == self.escape_next:
                     last_one.text = last_one.text + ' ' + text
                     return
-        self.tree.append(Text(text))
+        self.tree.append(Text(text, escape = self.escape_next))
         # Text is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1
@@ -212,6 +221,9 @@ class PyhaaParser(Parser):
 
     def handle_tap_rest(self, match):
         self.tree.current.append_attributes(match)
+
+    def handle_html_escape_toggle(self, match):
+        self.escape_next = False
 
     def indent_de(self, times=1):
         '''

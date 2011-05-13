@@ -39,3 +39,9 @@ class TestEntities(TestCase):
             '<a href="#">\'oh&nbsp;wow\'</a>',
         )
 
+    def test_decoding_aacute(self):
+        self.assertEqual(
+            encode.entity_decode('&Aacute;&#0000193;&#193;&#x000c1;&#xc1;\u00c1'),
+            chr(193) * 6,
+        )
+
