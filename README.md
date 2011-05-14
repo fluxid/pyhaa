@@ -42,5 +42,6 @@ Copyright and licence
 ---------------------
 
 Copyright © 2011 Tomasz Kowalczyk
+
 I licence this code under GNU Lesser General Public Licence Version 3
 
