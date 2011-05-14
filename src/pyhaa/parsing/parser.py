@@ -164,14 +164,14 @@ class PyhaaParser(Parser):
         self.begin_tag()
 
     def handle_tag_name(self, match):
-        self.tree.current.name = match.group(0)
+        self.tree.current.name = entity_decode(match.group(0))
 
     def handle_tag_class_start(self, match):
         if not self.creating_tag:
             self.begin_tag()
 
     def handle_tag_class_name(self, match):
-        self.tree.current.classes.add(match.group(0))
+        self.tree.current.classes.add(entity_decode(match.group(0)))
 
     def handle_tag_id_start(self, match):
         if not self.creating_tag:
@@ -183,7 +183,7 @@ class PyhaaParser(Parser):
                 SYNTAX_INFO.ID_ALREADY_SET,
                 self,
             )
-        self.tree.current.id_ = match.group(0)
+        self.tree.current.id_ = entity_decode(match.group(0))
 
     def handle_continue_inline(self, match):
         self.end_tag()
@@ -211,12 +211,12 @@ class PyhaaParser(Parser):
         self.tree.current.append_attributes(dict())
 
     def handle_tas_name(self, match):
-        name = match.group('value')
+        name = entity_decode(match.group('value'))
         self.tree.current.attributes_set[-1][name] = True
         self.last_tas_name = name
 
     def handle_tas_value(self, match):
-        self.tree.current.attributes_set[-1][self.last_tas_name] = match.group('value')
+        self.tree.current.attributes_set[-1][self.last_tas_name] = entity_decode(match.group('value'))
         self.last_tas_name = None
 
     def handle_tap_rest(self, match):

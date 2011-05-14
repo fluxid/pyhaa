@@ -146,3 +146,16 @@ class TestTagAttributes(TestCase):
         ))
         self.assertEqual(len(tree.children), 9)
 
+    def test_entity_decode(self):
+        tree = parse_string(jl(
+            '%&Aacute;.&Aacute;#&Aacute;(&Aacute;="&quot;&apos;&Aacute;")',
+        ))
+        tag1, = tree
+        self.assertEqual(tag1.name, '\u00c1')
+        self.assertEqual(tag1.id_, '\u00c1')
+        self.assertSetEqual(tag1.classes, {'\u00c1'})
+        self.assertDictEqual(
+            tag1.attributes_set[0],
+            {'\u00c1': '"\'\u00c1'},
+        )
+
