@@ -55,6 +55,8 @@ pyhaa_lexer = dict(
         match = (
             'comment',
             'tag_start',
+            #'code_statement_start',
+            'code_expression_start',
             'html_escape_toggle',
             'escape',
             'text',
@@ -199,12 +201,12 @@ pyhaa_lexer = dict(
     #    match = MRE('.+?\s*$'),
     #    after = 'line_end',
     #),
-    #code_value_start = dict(
-    #    match = MRE('\=\s*'),
-    #    after = 'code_value',
-    #),
-    #code_value = dict(
-    #    match = MRE('.+?\s*$'),
-    #    after = 'line_end',
-    #),
+    code_expression_start = dict(
+        match = MRE('\=\s*'),
+        after = 'code_value',
+    ),
+    code_expression = dict(
+        match = MRE('.+?\s*$'),
+        after = 'line_end',
+    ),
 )
