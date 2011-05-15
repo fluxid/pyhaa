@@ -42,10 +42,9 @@ class TestCodegenHtml(TestCase):
         cg = HTMLCodeGen(tree, bio, template_name = 'basic_template')
         cg.write()
         code = bio.getvalue().decode('utf-8')
-        globals_ = dict()
-        locals_ = dict()
-        exec(code, globals_, locals_)
-        template = locals_[locals_['template_class_name']]
+        dict_ = dict()
+        exec(code, dict_, dict_)
+        template = dict_[dict_['template_class_name']]
 
     def test_html_encode_toggle_and_text(self):
         tree = parse_string(jl(
@@ -58,10 +57,9 @@ class TestCodegenHtml(TestCase):
         cg = HTMLCodeGen(tree, bio)
         cg.write()
         code = bio.getvalue()
-        globals_ = dict()
-        locals_ = dict()
-        exec(code, globals_, locals_)
-        template = locals_[locals_['template_class_name']]
+        dict_ = dict()
+        exec(code, dict_, dict_)
+        template = dict_[dict_['template_class_name']]
         rendered = b''.join(iter_flatten(template().body(None))).decode('utf-8')
         self.assertEqual(
             rendered,
@@ -76,10 +74,9 @@ class TestCodegenHtml(TestCase):
         cg = HTMLCodeGen(tree, bio, encoding='iso-8859-2')
         cg.write()
         code = bio.getvalue()
-        globals_ = dict()
-        locals_ = dict()
-        exec(code, globals_, locals_)
-        template = locals_[locals_['template_class_name']]
+        dict_ = dict()
+        exec(code, dict_, dict_)
+        template = dict_[dict_['template_class_name']]
         rendered = b''.join(iter_flatten(template().body(None))).decode('iso-8859-2')
         self.assertEqual(
             rendered,
@@ -95,10 +92,9 @@ class TestCodegenHtml(TestCase):
         cg = HTMLCodeGen(tree, bio)
         cg.write()
         code = bio.getvalue()
-        globals_ = dict()
-        locals_ = dict()
-        exec(code, globals_, locals_)
-        template = locals_[locals_['template_class_name']]
+        dict_ = dict()
+        exec(code, dict_, dict_)
+        template = dict_[dict_['template_class_name']]
         rendered = b''.join(iter_flatten(template().body(('&', '&amp;')))).decode('utf-8')
         self.assertEqual(
             rendered,

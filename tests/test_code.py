@@ -25,6 +25,7 @@ from unittest import TestCase
 
 from pyhaa import (
     parse_string,
+    structure,
 )
 
 from .helpers import jl
@@ -37,9 +38,11 @@ class TestCode(TestCase):
             '= "b"',
             '%placeholder2',
         ))
-        #tag1, code1, code2, tag2 = tree
-        #self.assertIsInstance(tag1, structure.Tag)
-        #self.assertIsInstance(tag2, structure.Tag)
+        tag1, code1, code2, tag2 = tree
+        self.assert_(isinstance(tag1, structure.Tag))
+        self.assert_(isinstance(code1, structure.Expression))
+        self.assert_(isinstance(code2, structure.Expression))
+        self.assert_(isinstance(tag2, structure.Tag))
 
     def test_multiline_expressions(self):
         # Testing nasty multiline expressions with bad indenting
@@ -56,4 +59,8 @@ class TestCode(TestCase):
             '}, 2',
             '   )  ',
         ))
+        code1, code2, code3 = tree
+        self.assert_(isinstance(code1, structure.Expression))
+        self.assert_(isinstance(code2, structure.Expression))
+        self.assert_(isinstance(code3, structure.Expression))
 

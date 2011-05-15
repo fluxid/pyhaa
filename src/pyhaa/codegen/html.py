@@ -30,7 +30,7 @@ from . import CodeGen
 
 class HTMLCodeGen(CodeGen):
     superclass_name = 'HTMLTemplate'
-    imports = (
+    imports = CodeGen.imports + (
         'from pyhaa.runtime.html import HTMLTemplate',
     )
     void_tags = set((
@@ -127,7 +127,7 @@ class HTMLCodeGen(CodeGen):
             )
         else:
             self.write_io(
-                'yield self.open_tag({}, {}, {}, {}, {})'.format(
+                'yield self._ph_open_tag({}, {}, {}, {}, {})'.format(
                     self.byterepr(node.name),
                     self.byterepr(node.id_),
                     self.byterepr(node.classes or None),
@@ -150,7 +150,7 @@ class HTMLCodeGen(CodeGen):
             self.close_tag()
         else:
             self.write_io(
-                'yield self.close_tag()',
+                'yield self._ph_close_tag()',
             )
 
     def handle_open_text(self, node):
@@ -164,7 +164,7 @@ class HTMLCodeGen(CodeGen):
 
     def handle_open_expression(self, node):
         self.write_io(
-            'yield self.single_encode(({}), True, {}, self.encoding)'.format(
+            'yield _ph_single_encode(({}), True, {}, self.encoding)'.format(
                 node.content,
                 repr(node.escape),
             ),

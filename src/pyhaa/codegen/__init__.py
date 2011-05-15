@@ -39,9 +39,9 @@ def name_node_handling_function(prefix, node):
 
 
 class CodeGen:
-    superclass_name = 'Template'
+    superclass_name = ''
     imports = (
-        'from pyhaa.runtime import Template',
+        'from pyhaa.utils.encode import single_encode as _ph_single_encode',
     )
 
     def __init__(self, structure, io, **kwargs):

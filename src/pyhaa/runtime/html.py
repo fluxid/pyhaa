@@ -33,12 +33,12 @@ class HTMLTemplate(Template):
     def __init__(self, *args, **kwargs):
         self.tag_name_stack = list()
 
-    def open_tag(self, name, id_, classes, attributes, self_close):
+    def _ph_open_tag(self, name, id_, classes, attributes, self_close):
         name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, self.encoding)
         if not self_close:
             self.tag_name_stack.append(name)
         return open_tag(name, attributes, self_close)
 
-    def close_tag(self):
+    def _ph_close_tag(self):
         return close_tag(self.tag_name_stack.pop())
 
