@@ -37,6 +37,10 @@ log = logging.getLogger(__name__)
 def name_node_handling_function(prefix, node):
     return 'handle_' + prefix + utils.decamel(node.__class__.__name__)
 
+def or_if_none(value, replacement):
+    if value is None:
+        return replacement
+    return value
 
 class CodeGen:
     superclass_name = ''
@@ -45,10 +49,10 @@ class CodeGen:
     )
 
     def __init__(self, structure, io, **kwargs):
-        indent_string = kwargs.get('indent_string', DEFAULT_INDENT_STRING)
-        newline = kwargs.get('newline', DEFAULT_NEWLINE)
-        encoding = kwargs.get('encoding', DEFAULT_ENCODING)
-        template_name = kwargs.get('template_name', DEFAULT_TEMPLATE_NAME)
+        indent_string = or_if_none(kwargs.get('indent_string'), DEFAULT_INDENT_STRING)
+        newline = or_if_none(kwargs.get('newline'), DEFAULT_NEWLINE)
+        encoding = or_if_none(kwargs.get('encoding'), DEFAULT_ENCODING)
+        template_name = or_if_none(kwargs.get('template_name'), DEFAULT_TEMPLATE_NAME)
 
         self.structure = structure
         self.io = io
