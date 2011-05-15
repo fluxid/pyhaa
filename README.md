@@ -44,6 +44,7 @@ TODO
 Things TODO I left behind for later, not those "yet to be touched".
 
 1. Refactor python-code matchers - merge duplicated code, rethink how they should work
+1. Unit-test error handling
 
 Copyright and licence
 ---------------------

@@ -70,6 +70,6 @@ def html_render_to_iterator(template, function_name=None, args=None, kwargs=None
 
 def html_render_to_string(template, *args, **kwargs):
     iterator = html_render_to_iterator(template, *args, **kwargs)
-    rendered = b''.join(iterator).decode(template.encoding)
+    rendered = b''.join(iter_flatten(iterator)).decode(template.encoding)
     return rendered
 

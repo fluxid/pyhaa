@@ -318,7 +318,7 @@ def _entity_decode(match):
     hexa = match.group('hexa')
     if hexa:
         return chr(int(hexa, 16))
-    return whole
+    return whole # pragma: no cover
 
 def entity_decode(value):
     return RE_ENTITIES_DECODE.sub(_entity_decode, value)

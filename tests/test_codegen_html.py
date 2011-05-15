@@ -38,10 +38,10 @@ from .helpers import jl
 class TestCodegenHtml(TestCase):
     def test_basic_codegen(self):
         tree = parse_string(jl(
-            '%br',
-            '%div',
             '%p',
             '  %a Text',
+            '%input(checked)',
+            '%div',
         ))
         code = codegen_template(tree, template_name = 'basic_template')
         template = compile_template(code)
@@ -49,7 +49,25 @@ class TestCodegenHtml(TestCase):
         rendered = html_render_to_string(template, args=[None])
         self.assertEqual(
             rendered,
-            '<br /><div></div><p><a>Text</a></p>',
+            '<p><a>Text</a></p><input checked="checked" /><div></div>',
+        )
+
+    def test_void_tags(self):
+        tree = parse_string(jl(
+            '%br Text',
+        ))
+        self.assertRaises(Exception, codegen_template, tree)
+
+    def test_dynamic_tags(self):
+        tree = parse_string(jl(
+            '%p.a.b{"class": context[0], "_tag_name": context[1]}',
+        ))
+        code = codegen_template(tree)
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[('c', 'div')])
+        self.assertEqual(
+            rendered,
+            '<div class="c"></div>',
         )
 
     def test_html_encode_toggle_and_text(self):

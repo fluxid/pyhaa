@@ -153,7 +153,7 @@ class CodeGen:
         self.write_structure()
 
     def call_node_handling_function(self, prefix, node):
-        if node is None:
+        if node is None: # pragma: no cover
             return
         function_name = name_node_handling_function(prefix, node)
         function = getattr(self, function_name, None)
