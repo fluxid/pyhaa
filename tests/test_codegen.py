@@ -32,7 +32,7 @@ from pyhaa import (
 
 from .helpers import jl
 
-class TestCodeGen(codegen.CodeGen):
+class TestingCodeGen(codegen.CodeGen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.called_functions = list()
@@ -41,18 +41,20 @@ class TestCodeGen(codegen.CodeGen):
         self.called_functions.append(codegen.name_node_handling_function(prefix, node))
 
 
-class TestBasics(TestCase):
-    def test_decamel(self):
-        self.assertEqual(codegen.decamel('CodeGen'), '_code_gen')
-
+class TestCodegen(TestCase):
     def test_basic_codegen(self):
         tree = parse_string(jl(
             '%a',
             '  %b',
             '%c',
+            'text',
+            '=expression',
+            'again, text!',
+            '?raw text',
+            '?=raw_expression',
         ))
         bio = io.BytesIO()
-        cg = TestCodeGen(tree, bio)
+        cg = TestingCodeGen(tree, bio)
         cg.write()
         bio.getvalue().decode('utf-8')
         self.assertSequenceEqual(
@@ -64,6 +66,16 @@ class TestBasics(TestCase):
                 'handle_close_tag',
                 'handle_open_tag',
                 'handle_close_tag',
+                'handle_open_text',
+                'handle_close_text',
+                'handle_open_expression',
+                'handle_close_expression',
+                'handle_open_text',
+                'handle_close_text',
+                'handle_open_text',
+                'handle_close_text',
+                'handle_open_expression',
+                'handle_close_expression',
             ],
         )
 

@@ -23,6 +23,8 @@ from functools import wraps
 from itertools import count
 import re
 
+RE_DECAMEL = re.compile('[A-Z]')
+RE_CAMEL = re.compile('^([a-z])|_([a-z])')
 
 class DescEnum:
     __slots__ = ('to_desc', 'to_name', 'to_value')
@@ -139,4 +141,17 @@ def iter_flatten(generator):
             continue
 
         yield result
+
+def _decamel(match):
+    return '_' + match.group(0).lower()
+
+def decamel(string):
+    # We're not removing '_' prefix
+    return RE_DECAMEL.sub(_decamel, string)
+
+def _camel(match):
+    return (match.group(2) or match.group(1)).upper()
+
+def camel(string):
+    return RE_CAMEL.sub(_camel, string)
         

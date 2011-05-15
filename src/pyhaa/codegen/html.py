@@ -162,6 +162,14 @@ class HTMLCodeGen(CodeGen):
             single_encode(node.content, True, node.escape, self.encoding),
         )
 
+    def handle_open_expression(self, node):
+        self.write_io(
+            'yield self.single_encode(({}), True, {}, self.encoding)'.format(
+                node.content,
+                repr(node.escape),
+            ),
+        )
+
     def byterepr(self, value):
         return repr(single_encode(value, True, True, self.encoding))
 

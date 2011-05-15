@@ -18,6 +18,9 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+from ..utils.encode import single_encode
+
 class Template:
-    pass
+    def single_encode(self, *args, **kwargs):
+        return single_encode(*args, **kwargs)
 

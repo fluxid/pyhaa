@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Utility testing
+Test HTML code generation
 '''
 
 # Pyhaa - Templating system for Python 3
@@ -22,26 +22,16 @@ Utility testing
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import io
 from unittest import TestCase
 
-from pyhaa.utils import encode
+from pyhaa import utils
 
-class TestUtilsEncode(TestCase):
-    def test_encoding_basic(self):
-        self.assertEqual(
-            encode.entity_encode('<a href="#">\'oh&nbsp;wow\'</a>'),
-            '&lt;a href=&quot;#&quot;&gt;&apos;oh&amp;nbsp;wow&apos;&lt;/a&gt;'
-        )
+class TestUtils(TestCase):
+    def test_decamel(self):
+        self.assertEqual(utils.decamel('CodeGen'), '_code_gen')
 
-    def test_decoding_basic(self):
-        self.assertEqual(
-            encode.entity_decode('&lt;a href=&quot;#&quot;&gt;&apos;oh&amp;nbsp;wow&apos;&lt;/a&gt;'),
-            '<a href="#">\'oh&nbsp;wow\'</a>',
-        )
-
-    def test_decoding_aacute(self):
-        self.assertEqual(
-            encode.entity_decode('&Aacute;&#0000193;&#193;&#x000c1;&#xc1;\u00c1'),
-            chr(193) * 6,
-        )
+    def test_camel(self):
+        self.assertEqual(utils.camel('code_gen'), 'CodeGen')
+        self.assertEqual(utils.camel('_code_gen'), 'CodeGen')
 

@@ -29,7 +29,7 @@ from pyhaa import (
 
 from .helpers import jl
 
-class TestBasicTags(TestCase):
+class TestCode(TestCase):
     def test_basic_expressions(self):
         tree = parse_string(jl(
             '%placeholder',

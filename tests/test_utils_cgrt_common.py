@@ -32,7 +32,7 @@ def so(value):
     # reorder as would set do
     return ' '.join(set(value.split(' ')))
 
-class TestRuntimeBasic(TestCase):
+class TestUtilsCgrtCommon(TestCase):
     
     def test_prepare_for_tag_basic(self):
         self.assertSequenceEqual(

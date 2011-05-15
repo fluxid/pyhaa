@@ -33,31 +33,19 @@ from pyhaa.utils import iter_flatten
 
 from .helpers import jl
 
-class TestBasics(TestCase):
+class TestCodegenHtml(TestCase):
     def test_basic_codegen(self):
         tree = parse_string(jl(
             '%a',
-            '  %b to jest jakiś tekst...',
-            '%c(a)',
-            '%br',
-            '%div#im_so_dynamic(value="notlol"){"value":lol, "id":"cool effects of being dynamic"}',
-            '%label',
-            '  This looks cool!',
-            '  %input.text_box(type=text){"value":field_value}',
         ))
         bio = io.BytesIO()
-        cg = HTMLCodeGen(tree, bio)
+        cg = HTMLCodeGen(tree, bio, template_name = 'basic_template')
         cg.write()
         code = bio.getvalue().decode('utf-8')
-        #print(code)
-        globals_ = dict(
-            lol = 'lol',
-            field_value = 'zażółć gęślą jaźń',
-        )
+        globals_ = dict()
         locals_ = dict()
         exec(code, globals_, locals_)
-        template = locals_['ThisTemplate']
-        #print(b''.join(iter_flatten(template().render_body())).decode('utf-8'))
+        template = locals_[locals_['template_class_name']]
 
     def test_html_encode_toggle_and_text(self):
         tree = parse_string(jl(
@@ -73,14 +61,14 @@ class TestBasics(TestCase):
         globals_ = dict()
         locals_ = dict()
         exec(code, globals_, locals_)
-        template = locals_['ThisTemplate']
-        rendered = b''.join(iter_flatten(template().render_body())).decode('utf-8')
+        template = locals_[locals_['template_class_name']]
+        rendered = b''.join(iter_flatten(template().body(None))).decode('utf-8')
         self.assertEqual(
             rendered,
             '&amp; & &amp; &amp;',
         )
 
-    def test_html_encode_toggle_and_text(self):
+    def test_template_charset(self):
         tree = parse_string(jl(
             'Zażółć gęślą jaźń',
         ))
@@ -91,10 +79,29 @@ class TestBasics(TestCase):
         globals_ = dict()
         locals_ = dict()
         exec(code, globals_, locals_)
-        template = locals_['ThisTemplate']
-        rendered = b''.join(iter_flatten(template().render_body())).decode('iso-8859-2')
+        template = locals_[locals_['template_class_name']]
+        rendered = b''.join(iter_flatten(template().body(None))).decode('iso-8859-2')
         self.assertEqual(
             rendered,
             'Zażółć gęślą jaźń',
+        )
+
+    def test_expressions(self):
+        tree = parse_string(jl(
+            '=context[0]',
+            '?=context[1]',
+        ))
+        bio = io.BytesIO()
+        cg = HTMLCodeGen(tree, bio)
+        cg.write()
+        code = bio.getvalue()
+        globals_ = dict()
+        locals_ = dict()
+        exec(code, globals_, locals_)
+        template = locals_[locals_['template_class_name']]
+        rendered = b''.join(iter_flatten(template().body(('&', '&amp;')))).decode('utf-8')
+        self.assertEqual(
+            rendered,
+            '&amp;&amp;',
         )
 

@@ -26,21 +26,16 @@ from .. import (
     utils,
 )
 
-DEFAULT_INDENT = '    '
+DEFAULT_INDENT_STRING = '    '
 DEFAULT_NEWLINE = '\n'
-
-RE_DECAMEL = re.compile('[A-Z]')
+DEFAULT_ENCODING = 'utf-8'
+DEFAULT_TEMPLATE_NAME = 'this_template'
 
 log = logging.getLogger(__name__)
 
-def decamel(string):
-    def _decamel(match):
-        return '_' + match.group(0).lower()
-    # We're not removing '_' prefix
-    return RE_DECAMEL.sub(_decamel, string)
 
 def name_node_handling_function(prefix, node):
-    return 'handle_' + prefix + decamel(node.__class__.__name__)
+    return 'handle_' + prefix + utils.decamel(node.__class__.__name__)
 
 
 class CodeGen:
@@ -49,12 +44,19 @@ class CodeGen:
         'from pyhaa.runtime import Template',
     )
 
-    def __init__(self, structure, io, indent_string=DEFAULT_INDENT, newline=DEFAULT_NEWLINE, encoding='utf-8'):
+    def __init__(self, structure, io, **kwargs):
+        indent_string = kwargs.get('indent_string', DEFAULT_INDENT_STRING)
+        newline = kwargs.get('newline', DEFAULT_NEWLINE)
+        encoding = kwargs.get('encoding', DEFAULT_ENCODING)
+        template_name = kwargs.get('template_name', DEFAULT_TEMPLATE_NAME)
+
         self.structure = structure
         self.io = io
         self.indent_string = indent_string.encode(encoding)
         self.newline = newline.encode(encoding)
         self.encoding = encoding
+        self.template_name = template_name
+        self.class_name = utils.camel(template_name)
 
         self.indent_level = 0
 
@@ -79,7 +81,11 @@ class CodeGen:
 
     def write_class(self):
         self.write_io(
-            'class ThisTemplate({}):'.format(self.superclass_name),
+            'template_class_name = ' + repr(self.class_name),
+            'class {}({}):'.format(
+                self.class_name,
+                self.superclass_name,
+            ),
         )
         self.indent()
         self.write_io(
@@ -94,7 +100,7 @@ class CodeGen:
 
     def write_template_function(self, name):
         self.write_io(
-            'def render_{}(self, **kwargs):'.format(name),
+            'def {}(self, context):'.format(name),
         )
         self.indent()
 
