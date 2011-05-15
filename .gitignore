@@ -4,5 +4,5 @@
 /*.tar.gz
 /build
 /dist
-/src/pyhaa.egg-info
-.coverage
+/pyhaa.egg-info
+/.coverage
