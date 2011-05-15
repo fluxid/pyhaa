@@ -64,3 +64,11 @@ class TestCode(TestCase):
         self.assert_(isinstance(code2, structure.Expression))
         self.assert_(isinstance(code3, structure.Expression))
 
+    def test_if_statement(self):
+        tree = parse_string(jl(
+            '-if(1): %tag',
+            '-if True:',
+            '  %tag',
+        ))
+        assert False
+

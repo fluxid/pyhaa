@@ -29,6 +29,8 @@ from .matchers import (
     ConstantLength,
     PythonDictMatcher,
     PythonExpressionMatcher,
+    PythonExpressionNoColonMatcher,
+    PK,
 )
 
 
@@ -56,7 +58,7 @@ pyhaa_lexer = dict(
         match = (
             'comment',
             'tag_start',
-            #'code_statement_start',
+            'code_statement_start',
             'code_expression_start',
             'html_escape_toggle',
             'escape',
@@ -194,14 +196,38 @@ pyhaa_lexer = dict(
         match = PythonDictMatcher(),
         after = 'tag_after_attributes',
     ),
-    #code_statement_start = dict(
-    #    match = MRE('\-\s*'),
-    #    after = 'code_statement',
-    #),
-    #code_statement = dict(
-    #    match = MRE('.+?\s*$'),
-    #    after = 'line_end',
-    #),
+    code_statement_start = dict(
+        match = MRE('\-\s*'),
+        after = 'code_statement',
+    ),
+    code_statement = dict(
+        match = (
+            'code_if_statement',
+            'code_simple_statement',
+        ),
+    ),
+    code_if_statement = dict(
+        match = PK('if'),
+        after = 'code_if_expression',
+    ),
+    code_if_expression = dict(
+        match = PythonExpressionNoColonMatcher(),
+        after = 'code_colon',
+    ),
+    code_colon = dict(
+        match = MRE(':'),
+        after = 'after_code_colon',
+    ),
+    after_code_colon = dict(
+        match = (
+            'line_end',
+            'inline',
+        ),
+    ),
+    code_simple_statement = dict(
+        match = PythonExpressionMatcher(),
+        after = 'line_end',
+    ),
     code_expression_start = dict(
         match = MRE('\=\s*'),
         after = 'code_expression',

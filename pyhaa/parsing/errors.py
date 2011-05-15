@@ -59,6 +59,7 @@ SYNTAX_INFO = DescEnum(
         'Pythonic attributes must be dictionary or '
         'dictionary comprehension literal.'
     )),
+    ('INVALID_PYTHON_EXPRESSION', "Invalid python expression."),
     ('ID_ALREADY_SET', "Tag's id is already set."),
 )
 

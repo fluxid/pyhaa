@@ -22,7 +22,10 @@ import ast
 import re
 import tokenize
 
-from fxd.minilexer import Matcher
+from fxd.minilexer import (
+    Matcher,
+    MRE,
+)
 
 from .errors import (
     PyhaaSyntaxError,
@@ -61,6 +64,7 @@ class ConstantLength(Matcher):
 class PythonExpressionBaseMatcher(Matcher):
     match_bracket = None
     ast_check = True
+    break_at_colon = False
 
     def match(self, parser, line, pos):
         parser.cache_push()
@@ -104,7 +108,10 @@ class PythonExpressionBaseMatcher(Matcher):
                             parser,
                             dict(current_pos = pos + scol),
                         )
-                    elif tstring == ':' and not stack:
+                    elif self.break_at_colon and tstring == ':' and not stack:
+                        # Get back one char, so ast won't whine about
+                        # syntax error caused by colon
+                        ecol = max(0, ecol-1)
                         break
                 if self.match_bracket and not stack:
                     break
@@ -154,7 +161,7 @@ class PythonExpressionBaseMatcher(Matcher):
 
         return pos + len(lines[-1]), jlines
 
-    def check_ast(self, parser, ast_tree):
+    def check_ast(self, parser, line, pos, ast_tree):
         pass
 
 
@@ -176,4 +183,15 @@ class PythonExpressionMatcher(PythonExpressionBaseMatcher):
                 SYNTAX_INFO.INVALID_PYTHON_EXPRESSION,
                 parser,
             )
+
+
+class PythonExpressionNoColonMatcher(PythonExpressionMatcher):
+    break_at_colon = True
+
+
+def PK(value):
+    '''
+    Python keyword matcher - basicaly w word and any amount of whitespace
+    '''
+    return MRE(value + r'\b\s*')
 
