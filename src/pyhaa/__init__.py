@@ -18,4 +18,5 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from .parsing import *
+from .parsing.errors import *
+from .shorthands import *

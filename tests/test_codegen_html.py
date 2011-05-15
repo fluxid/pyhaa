@@ -26,25 +26,31 @@ import io
 from unittest import TestCase
 
 from pyhaa import (
+    codegen_template,
+    compile_template,
+    html_render_to_string,
     parse_string,
 )
-from pyhaa.codegen.html import HTMLCodeGen
-from pyhaa.utils import iter_flatten
 
 from .helpers import jl
+
 
 class TestCodegenHtml(TestCase):
     def test_basic_codegen(self):
         tree = parse_string(jl(
-            '%a',
+            '%br',
+            '%div',
+            '%p',
+            '  %a Text',
         ))
-        bio = io.BytesIO()
-        cg = HTMLCodeGen(tree, bio, template_name = 'basic_template')
-        cg.write()
-        code = bio.getvalue().decode('utf-8')
-        dict_ = dict()
-        exec(code, dict_, dict_)
-        template = dict_[dict_['template_class_name']]
+        code = codegen_template(tree, template_name = 'basic_template')
+        template = compile_template(code)
+        self.assertEqual(template.__name__, 'BasicTemplate')
+        rendered = html_render_to_string(template, args=[None])
+        self.assertEqual(
+            rendered,
+            '<br /><div></div><p><a>Text</a></p>',
+        )
 
     def test_html_encode_toggle_and_text(self):
         tree = parse_string(jl(
@@ -53,14 +59,9 @@ class TestCodegenHtml(TestCase):
             '?&amp;',
             '&amp;',
         ))
-        bio = io.BytesIO()
-        cg = HTMLCodeGen(tree, bio)
-        cg.write()
-        code = bio.getvalue()
-        dict_ = dict()
-        exec(code, dict_, dict_)
-        template = dict_[dict_['template_class_name']]
-        rendered = b''.join(iter_flatten(template().body(None))).decode('utf-8')
+        code = codegen_template(tree)
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[None])
         self.assertEqual(
             rendered,
             '&amp; & &amp; &amp;',
@@ -70,14 +71,9 @@ class TestCodegenHtml(TestCase):
         tree = parse_string(jl(
             'Zażółć gęślą jaźń',
         ))
-        bio = io.BytesIO()
-        cg = HTMLCodeGen(tree, bio, encoding='iso-8859-2')
-        cg.write()
-        code = bio.getvalue()
-        dict_ = dict()
-        exec(code, dict_, dict_)
-        template = dict_[dict_['template_class_name']]
-        rendered = b''.join(iter_flatten(template().body(None))).decode('iso-8859-2')
+        code = codegen_template(tree, encoding='iso-8859-2')
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[None])
         self.assertEqual(
             rendered,
             'Zażółć gęślą jaźń',
@@ -88,14 +84,9 @@ class TestCodegenHtml(TestCase):
             '=context[0]',
             '?=context[1]',
         ))
-        bio = io.BytesIO()
-        cg = HTMLCodeGen(tree, bio)
-        cg.write()
-        code = bio.getvalue()
-        dict_ = dict()
-        exec(code, dict_, dict_)
-        template = dict_[dict_['template_class_name']]
-        rendered = b''.join(iter_flatten(template().body(('&', '&amp;')))).decode('utf-8')
+        code = codegen_template(tree)
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[('&', '&amp;')])
         self.assertEqual(
             rendered,
             '&amp;&amp;',
