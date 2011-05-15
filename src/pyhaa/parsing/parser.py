@@ -29,13 +29,7 @@ from .errors import (
 )
 from .lexer import pyhaa_lexer
 
-from ..structure import (
-    PyhaaParentNode,
-    PyhaaParent,
-    PyhaaTree,
-    Tag,
-    Text,
-)
+from .. import structure
 
 from ..utils.encode import entity_decode
 
@@ -48,13 +42,14 @@ class PyhaaParser(Parser):
         self.indent = 0
         self.tab_width = 0
         self.length = 0
-        self.tree = PyhaaTree()
+        self.tree = structure.PyhaaTree()
 
         self.current_opened = 0
         self.opened_stack = list()
 
         self.last_tas_name = None
         self.creating_tag = False
+        self.continue_attributes = False
         self.escape_next = True
 
     def token_match(self, token, match):
@@ -62,8 +57,11 @@ class PyhaaParser(Parser):
         func = getattr(self, 'handle_' + token, None)
         if func:
             func(match)
-        if token != 'html_escape_toggle':
+
+        if not self.continue_attributes:
             self.escape_next = True
+        else:
+            self.continue_attributes = False
 
     def on_bad_token(self):
         raise PyhaaSyntaxError(SYNTAX_INFO.SYNTAX_ERROR, self)
@@ -150,7 +148,7 @@ class PyhaaParser(Parser):
 
     def begin_tag(self):
         self.creating_tag = True
-        self.tree.append(Tag())
+        self.tree.append(structure.Tag())
         self.current_opened += 1
 
     def end_tag(self):
@@ -194,14 +192,14 @@ class PyhaaParser(Parser):
             # We escape text, but decode entities/unsescape first,
             # we will escape it again at codegen level
             text = entity_decode(text)
-        if isinstance(self.tree.current, PyhaaParent):
+        if isinstance(self.tree.current, structure.PyhaaParent):
             children = self.tree.current.children
             if children:
                 last_one = children[-1]
-                if isinstance(last_one, Text) and last_one.escape == self.escape_next:
+                if isinstance(last_one, structure.Text) and last_one.escape == self.escape_next:
                     last_one.text = last_one.text + ' ' + text
                     return
-        self.tree.append(Text(text, escape = self.escape_next))
+        self.tree.append(structure.Text(text, escape = self.escape_next))
         # Text is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1
@@ -224,6 +222,13 @@ class PyhaaParser(Parser):
 
     def handle_html_escape_toggle(self, match):
         self.escape_next = False
+        self.continue_attributes = True
+
+    def handle_code_expression_start(self, match):
+        self.continue_attributes = True
+
+    def handle_code_expression(self, match):
+        pass
 
     def indent_de(self, times=1):
         '''
@@ -240,7 +245,7 @@ class PyhaaParser(Parser):
         '''
         Indented line
         '''
-        if not isinstance(self.tree.current, PyhaaParentNode):
+        if not isinstance(self.tree.current, structure.PyhaaParentNode):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.UNEXPECTED_INDENT,
                 self,
