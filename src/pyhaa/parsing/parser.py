@@ -197,10 +197,10 @@ class PyhaaParser(Parser):
             if children:
                 last_one = children[-1]
                 if isinstance(last_one, structure.Text) and last_one.escape == self.escape_next:
-                    last_one.text = last_one.text + ' ' + text
+                    last_one.content = last_one.content + ' ' + text
                     return
         self.tree.append(structure.Text(text, escape = self.escape_next))
-        # Text is not openable, but we must to "close" it explicitly when
+        # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1
 
@@ -228,7 +228,10 @@ class PyhaaParser(Parser):
         self.continue_attributes = True
 
     def handle_code_expression(self, match):
-        pass
+        self.tree.append(structure.Expression(match, escape = self.escape_next))
+        # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
+        # reindenting
+        self.current_opened += 1
 
     def indent_de(self, times=1):
         '''

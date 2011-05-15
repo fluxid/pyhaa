@@ -159,7 +159,7 @@ class HTMLCodeGen(CodeGen):
                 b' ',
             )
         self.write_simple_bytes(
-            single_encode(node.text, True, node.escape, self.encoding),
+            single_encode(node.content, True, node.escape, self.encoding),
         )
 
     def byterepr(self, value):

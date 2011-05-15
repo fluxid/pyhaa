@@ -77,8 +77,8 @@ class TestTagsWithIdClass(TestCase):
         self.assertEqual(tag_li2.name, 'li')
         text1, = tag_li1.children
         text2, = tag_li2.children
-        self.assertEqual(text1.text, 'spam')
-        self.assertEqual(text2.text, 'eggs')
+        self.assertEqual(text1.content, 'spam')
+        self.assertEqual(text2.content, 'eggs')
 
     def test_even_more_complicated(self):
         # Random structure made for lolz
@@ -103,8 +103,8 @@ class TestTagsWithIdClass(TestCase):
         self.assertSetEqual(tag_a2.classes, {'bounce'})
         text1, = tag_a1.children
         text2, = tag_a2.children
-        self.assertEqual(text1.text, 'my pets')
-        self.assertEqual(text2.text, 'my sweet photos')
+        self.assertEqual(text1.content, 'my pets')
+        self.assertEqual(text2.content, 'my sweet photos')
 
     def test_child_class(self):
         # Make sure we really called end_tag and 'foo' class wont be assigned

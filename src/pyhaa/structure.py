@@ -82,6 +82,19 @@ class PyhaaNode:
         )
 
 
+class PyhaaSimpleContent(PyhaaNode):
+    def __init__(self, content = None, escape = True, **kwargs):
+        self.content = content
+        self.escape = escape
+        super().__init__(**kwargs)
+
+    def __repr__(self):
+        return '<{} {}>'.format(
+            self.__class__.__name__,
+            repr(self.content),
+        )
+
+
 class PyhaaParentNode(PyhaaParent, PyhaaNode):
     def __init__(self, ws_in_left = True, ws_in_right = True, **kwargs):
         self.ws_in_left = ws_in_left
@@ -138,15 +151,10 @@ class Tag(PyhaaParentNode):
         )
 
 
-class Text(PyhaaNode):
-    def __init__(self, text = None, escape = True, **kwargs):
-        self.text = text
-        self.escape = escape
-        super().__init__(**kwargs)
+class Text(PyhaaSimpleContent):
+    pass
 
-    def __repr__(self):
-        return '<{} {}>'.format(
-            self.__class__.__name__,
-            repr(self.text),
-        )
+
+class Expression(PyhaaSimpleContent):
+    pass
 
