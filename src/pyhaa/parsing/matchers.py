@@ -72,7 +72,7 @@ class PythonBracketMatcher(Matcher):
         try:
             for token in tokenize.tokenize(readline):
                 ttype, tstring, (srow, scol), (erow, ecol), tline = token
-                if srow == 0:
+                if not srow:
                     continue
 
                 if ttype == tokenize.OP:
@@ -132,7 +132,7 @@ class PythonBracketMatcher(Matcher):
 
         return pos + len(lines[-1]), result
 
-    def check_ast(self, parser, ast_tree):
+    def check_ast(self, parser, line, pos, ast_tree):
         pass
 
 
@@ -144,10 +144,6 @@ class PythonDictMatcher(PythonBracketMatcher):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.INVALID_PYTHON_ATTRIBUTES,
                 parser,
-                #dict(
-                #    current_pos = pos,
-                #    length = len(line),
-                #),
             )
 
 
@@ -164,3 +160,94 @@ class ConstantLength(Matcher):
             return pos + self.length, result
         return None
         
+
+class PythonLineMatcher(Matcher):
+    ast_check = True
+
+    def match(self, parser, line, pos):
+        parser.cache_push()
+
+        # We're not interested in what was before
+        line = line[pos:]
+        lines = []
+
+        def linegen():
+            yield line
+            while True:
+                yield parser.readline()
+        lineiter = linegen()
+        
+        def readline():
+            current_line = next(lineiter, '')
+            lines.append(current_line)
+            return current_line.encode('utf8')
+
+        erow = 1
+        ecol = 0
+
+        try:
+            for token in tokenize.tokenize(readline):
+                ttype, tstring, (srow, scol), (erow, ecol), tline = token
+                if not srow:
+                    continue
+
+                if ttype in (tokenize.NEWLINE, tokenize.ENDMARKER):
+                    break
+        except tokenize.TokenError:
+            if self.ast_check:
+                # Ignore. Let ast parse it again, actual error may be different
+                pass
+
+        #import pdb; pdb.set_trace()
+
+        lines = lines[:srow]
+        lines[-1] = lines[-1][:ecol].rstrip()
+
+        # FIXME Tokenizer reads a bit ahead... Deal with it better than below
+        parser.cache_pop()
+        for i in range(len(lines)-1):
+            parser.readline()
+
+        jlines = (''.join(lines)+'\n')
+
+        if self.check_ast:
+            jlines2 = jlines.encode('utf8')
+            with clear_exception_context(PyhaaSyntaxError):
+                try:
+                    ast_tree = ast.parse(jlines2)
+                except SyntaxError as e:
+                    # Offset is for bytes, not string characters
+                    # Even if I give normal string to parse, I'll get invalid
+                    # offset if line has unicode characters before it
+                    fragment = jlines2[:e.offset].decode('utf8')
+                    # substract 1 because python parser counts from one, and we
+                    # count from zero
+                    offset = len(fragment) - 1
+                    raise PyhaaSyntaxError(
+                        SYNTAX_INFO.PYTHON_SYNTAX_ERROR,
+                        parser,
+                        dict(current_pos = pos + offset),
+                        desc = e.msg,
+                    )
+
+            self.check_ast(parser, line, pos, ast_tree)
+
+        result = jlines
+
+        if len(lines) > 1:
+            pos = 0
+
+        return pos + len(lines[-1]), result
+
+    def check_ast(self, parser, ast_tree):
+        pass
+
+
+class PythonExpressionMatcher(PythonLineMatcher):
+    def check_ast(self, parser, line, pos, ast_tree):
+        if not (len(ast_tree.body) == 1 and isinstance(ast_tree.body[0], ast.Expr)):
+            raise PyhaaSyntaxError(
+                SYNTAX_INFO.INVALID_PYTHON_EXPRESSION,
+                parser,
+            )
+

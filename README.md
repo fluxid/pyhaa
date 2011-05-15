@@ -38,6 +38,13 @@ Decisions
 1. Yield instead of writing into io objects
 1. Encode into given charset BEFORE compiling template to python code
 
+TODO
+----
+
+Things TODO I left behind for later, not those "yet to be touched".
+
+1. Refactor python-code matchers - merge duplicated code, rethink how they should work
+
 Copyright and licence
 ---------------------
 

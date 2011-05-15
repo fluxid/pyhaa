@@ -28,6 +28,7 @@ from .errors import PyhaaSyntaxError, SYNTAX_INFO
 from .matchers import (
     ConstantLength,
     PythonDictMatcher,
+    PythonExpressionMatcher,
 )
 
 
@@ -203,10 +204,11 @@ pyhaa_lexer = dict(
     #),
     code_expression_start = dict(
         match = MRE('\=\s*'),
-        after = 'code_value',
+        after = 'code_expression',
     ),
     code_expression = dict(
-        match = MRE('.+?\s*$'),
+        match = PythonExpressionMatcher(),
         after = 'line_end',
     ),
 )
+
