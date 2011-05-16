@@ -115,8 +115,8 @@ class TestCodegenHtml(TestCase):
             '-my_iter = iter(context)',
             '%ul',
             '  -while True:',
-            '    -value = next(my_iter)',
-            '    -if not value:',
+            '    -value = next(my_iter, None)',
+            '    -if value is None:',
             '      -break',
             '    %li =value',
         ))
