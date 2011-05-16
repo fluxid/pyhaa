@@ -47,6 +47,14 @@ Things TODO I left behind for later, not those "yet to be touched".
 1. Unit-test error handling
 1. Reorganize and clean up code in parser
 1. Reorganize and clean up lexer (and think of better names for code-related tokens)
+1. Think how to handle this code:
+   ```
+   -while True:
+     %li
+       -break
+   ```
+   (This results in opened, but not closed li tag...)
+1. Handle errors raised in exec (while compiling template) more correctly
 
 Copyright and licence
 ---------------------
