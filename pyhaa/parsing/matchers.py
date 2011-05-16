@@ -65,6 +65,7 @@ class PythonExpressionBaseMatcher(Matcher):
     match_bracket = None
     ast_check = True
     break_at_colon = False
+    break_at_keyword = []
 
     def match(self, parser, line, pos):
         parser.cache_push()
@@ -91,6 +92,7 @@ class PythonExpressionBaseMatcher(Matcher):
         ecol = 0
 
         try:
+
             for token in tokenize.tokenize(readline):
                 ttype, tstring, (srow, scol), (erow, ecol), tline = token
                 if not srow:
@@ -111,10 +113,16 @@ class PythonExpressionBaseMatcher(Matcher):
                     elif self.break_at_colon and tstring == ':' and not stack:
                         # Get back one char, so ast won't whine about
                         # syntax error caused by colon
-                        ecol = max(0, ecol-1)
+                        ecol -= 1
                         break
+
+                elif ttype == tokenize.NAME and not stack and tstring in self.break_at_keyword:
+                    ecol -= len(tstring)
+                    break
+
                 if self.match_bracket and not stack:
                     break
+
         except tokenize.TokenError:
             if self.ast_check:
                 # Ignore. Let ast parse it again, actual error may be different
@@ -189,9 +197,22 @@ class PythonExpressionNoColonMatcher(PythonExpressionMatcher):
     break_at_colon = True
 
 
+class PythonTargetMatcher(PythonExpressionMatcher):
+    break_at_keyword = ['in']
+
+    def check_ast(self, parser, line, pos, ast_tree):
+        super().check_ast(parser, line, pos, ast_tree)
+        value = ast_tree.body[0].value
+        if not isinstance(value, (ast.Attribute, ast.Tuple, ast.List, ast.Name, ast.Starred, ast.Subscript)):
+            raise PyhaaSyntaxError(
+                SYNTAX_INFO.INVALID_PYTHON_TARGET,
+                parser,
+            )
+
+
 def PK(value):
     '''
     Python keyword matcher - basicaly w word and any amount of whitespace
     '''
-    return MRE(value + r'\b\s*')
+    return MRE(r'({})\b\s*'.format(value))
 

@@ -49,19 +49,41 @@ class PyhaaParser(Parser):
 
         self.last_tas_name = None
         self.creating_tag = False
-        self.continue_attributes = False
-        self.escape_next = True
+        # TODO Merge two above variables into below code
+        self.continue_temporary = set()
+        self.temporary_info = dict()
+
+    # Below functions are used to hold temporary state
+
+    def get_info(self, name, default):
+        return self.temporary_info.get(name, default)
+
+    def continue_info(self, name):
+        self.continue_temporary.add(name)
+
+    def set_info(self, name, value):
+        self.temporary_info[name] = value
+        self.continue_info(name)
+
+    @property
+    def escape_next(self):
+        return self.get_info('escape_next', True)
+
+    # Handling token matches
 
     def token_match(self, token, match):
         super().token_match(token, match)
         func = getattr(self, 'handle_' + token, None)
         if func:
             func(match)
-
-        if not self.continue_attributes:
-            self.escape_next = True
-        else:
-            self.continue_attributes = False
+            # Don't clear temporary data if we don't handle token
+            if self.continue_temporary:
+                to_delete = set(self.temporary_info.keys()) - self.continue_temporary
+                for key in to_delete:
+                    del self.temporary_info[key]
+                self.continue_temporary.clear()
+            else:
+                self.temporary_info.clear()
 
     def on_bad_token(self):
         raise PyhaaSyntaxError(SYNTAX_INFO.SYNTAX_ERROR, self)
@@ -131,11 +153,13 @@ class PyhaaParser(Parser):
                         indent = self.indent,
                     )
 
+        expected_indent = self.get_info('expected_indent', False)
         if eindent == 0:
             self.indent_re()
         elif eindent < 0:
             self.indent_de(-eindent)
         elif eindent == 1:
+            expected_indent = False
             self.indent_in()
         else:
             # Wrong! We can indent only one level at a time!
@@ -144,6 +168,12 @@ class PyhaaParser(Parser):
                 self,
                 indent = self.indent,
                 new_indent = self.indent + eindent,
+            )
+
+        if expected_indent:
+            raise PyhaaSyntaxError(
+                SYNTAX_INFO.EXPECTED_INDENT,
+                self,
             )
 
     def begin_tag(self):
@@ -156,6 +186,7 @@ class PyhaaParser(Parser):
         self.last_tas_name = None
 
     def handle_line_end(self, match):
+        self.continue_info('expected_indent')
         self.end_tag()
 
     def handle_tag_name_start(self, match):
@@ -199,7 +230,7 @@ class PyhaaParser(Parser):
                 if isinstance(last_one, structure.Text) and last_one.escape == self.escape_next:
                     last_one.content = last_one.content + ' ' + text
                     return
-        self.tree.append(structure.Text(text, escape = self.escape_next))
+        self.tree.append(structure.Text(content = text, escape = self.escape_next))
         # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1
@@ -221,17 +252,42 @@ class PyhaaParser(Parser):
         self.tree.current.append_attributes(match)
 
     def handle_html_escape_toggle(self, match):
-        self.escape_next = False
-        self.continue_attributes = True
+        self.set_info('escape_next', False)
 
     def handle_code_expression_start(self, match):
-        self.continue_attributes = True
+        self.continue_info('escape_next')
 
     def handle_code_expression(self, match):
-        self.tree.append(structure.Expression(match, escape = self.escape_next))
+        self.tree.append(structure.Expression(content = match, escape = self.escape_next))
         # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1
+
+    def handle_code_semi_compound_statement(self, match):
+        self.set_info('statement', match.group(1))
+
+    def handle_code_statement_with_expression(self, match):
+        self.set_info('statement', match.group(1))
+
+    def handle_code_statement_with_expression_content(self, match):
+        self.set_info('statement_expression', match)
+        self.continue_info('statement')
+
+    def handle_code_colon(self, match):
+        statement = self.get_info('statement', None)
+        assert statement
+        if statement in ('if', 'elif', 'while'):
+            expression = self.get_info('statement_expression', None)
+            assert expression
+            complete = statement + ' ' + expression + ':'
+        else:
+            complete = statement + ':'
+        self.tree.append(structure.CompoundStatement(content = complete))
+        self.set_info('expected_indent', True)
+        self.current_opened += 1
+
+    def handle_code_simple_statement(self, match):
+        self.tree.append(structure.Statement(content = match))
 
     def indent_de(self, times=1):
         '''

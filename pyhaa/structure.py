@@ -47,9 +47,9 @@ class PyhaaParent:
 
 
 class PyhaaTree(PyhaaParent):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.current = self
-        super().__init__()
+        super().__init__(**kwargs)
 
     def append(self, other):
         if self.current is self:
@@ -65,13 +65,12 @@ class PyhaaTree(PyhaaParent):
 
 
 class PyhaaNode:
-    def __init__(self, ws_out_left = True, ws_out_right = True):
+    def __init__(self, **kwargs):
         self.parent = None
         self.root = None
         self.prev_sibling = None
         self.next_sibling = None
-        self.ws_out_left = ws_out_left
-        self.ws_out_right = ws_out_right
+        super().__init__(**kwargs)
 
     def append(self, other):
         raise Exception("Can\'t append children to normal element")
@@ -83,8 +82,19 @@ class PyhaaNode:
 
 
 class PyhaaSimpleContent(PyhaaNode):
-    def __init__(self, content = None, escape = True, **kwargs):
+    def __init__(self, content = None, **kwargs):
         self.content = content
+        super().__init__(**kwargs)
+
+    def __repr__(self):
+        return '<{} {}>'.format(
+            self.__class__.__name__,
+            repr(self.content),
+        )
+
+
+class PyhaaEscapeableContent(PyhaaSimpleContent):
+    def __init__(self, escape = True, **kwargs):
         self.escape = escape
         super().__init__(**kwargs)
 
@@ -96,9 +106,7 @@ class PyhaaSimpleContent(PyhaaNode):
 
 
 class PyhaaParentNode(PyhaaParent, PyhaaNode):
-    def __init__(self, ws_in_left = True, ws_in_right = True, **kwargs):
-        self.ws_in_left = ws_in_left
-        self.ws_in_right = ws_in_right
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
 
@@ -151,10 +159,18 @@ class Tag(PyhaaParentNode):
         )
 
 
-class Text(PyhaaSimpleContent):
+class Text(PyhaaEscapeableContent):
     pass
 
 
-class Expression(PyhaaSimpleContent):
+class Expression(PyhaaEscapeableContent):
+    pass
+
+
+class SimpleStatement(PyhaaSimpleContent):
+    pass
+
+
+class CompoundStatement(PyhaaParentNode, PyhaaSimpleContent):
     pass
 

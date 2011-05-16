@@ -193,3 +193,21 @@ class TestErrors(TestCase):
             '#s#d',
         )
 
+    def test_expected_indent(self):
+        self.assertPSE(
+            SYNTAX_INFO.EXPECTED_INDENT,
+            parse_string,
+            jl(
+                '-if 0:',
+                'nope!',
+            ),
+        )
+        self.assertPSE(
+            SYNTAX_INFO.EXPECTED_INDENT,
+            parse_string,
+            jl(
+                '-else:',
+                'nope!',
+            ),
+        )
+

@@ -53,6 +53,7 @@ SYNTAX_INFO = DescEnum(
         "try to continue but this may fail."
     )),
     ('UNEXPECTED_INDENT', 'Unexpected indent'),
+    ('EXPECTED_INDENT', 'Expected indent'),
     ('UNBALANCED_BRACKETS', 'Unbalanced brackets in Python expression.'),
     ('PYTHON_SYNTAX_ERROR', 'Python syntax error: "{desc}".'),
     ('INVALID_PYTHON_ATTRIBUTES', (

@@ -64,11 +64,41 @@ class TestCode(TestCase):
         self.assert_(isinstance(code2, structure.Expression))
         self.assert_(isinstance(code3, structure.Expression))
 
-    def test_if_statement(self):
+    def test_if_elif_while_statements(self):
         tree = parse_string(jl(
             '-if(1): %tag',
-            '-if True:',
+            '-elif True:',
             '  %tag',
+            '-while \tFalse:',
+            '  Will not happen!',
         ))
-        assert False
+        s1, s2, s3 = tree
+        t1, = s1
+        t2, = s2
+        t3, = s3
+        self.assert_(isinstance(s1, structure.CompoundStatement))
+        self.assert_(isinstance(s2, structure.CompoundStatement))
+        self.assert_(isinstance(s3, structure.CompoundStatement))
+        self.assert_(isinstance(t1, structure.Tag))
+        self.assert_(isinstance(t2, structure.Tag))
+        self.assert_(isinstance(t3, structure.Text))
+        self.assertEqual(s1.content, 'if (1):')
+        self.assertEqual(s2.content, 'elif True:')
+        self.assertEqual(s3.content, 'while False:')
+
+    def test_else_try_statements(self):
+        tree = parse_string(jl(
+            '-try \t  : %tag',
+            '-else:',
+            '  sup!',
+        ))
+        s1, s2 = tree
+        t1, = s1
+        t2, = s2
+        self.assert_(isinstance(s1, structure.CompoundStatement))
+        self.assert_(isinstance(s2, structure.CompoundStatement))
+        self.assert_(isinstance(t1, structure.Tag))
+        self.assert_(isinstance(t2, structure.Text))
+        self.assertEqual(s1.content, 'try:')
+        self.assertEqual(s2.content, 'else:')
 

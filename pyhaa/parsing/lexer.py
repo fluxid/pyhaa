@@ -202,27 +202,39 @@ pyhaa_lexer = dict(
     ),
     code_statement = dict(
         match = (
-            'code_if_statement',
+            'code_statement_with_expression',
+            'code_semi_compound_statement',
             'code_simple_statement',
         ),
     ),
-    code_if_statement = dict(
-        match = PK('if'),
-        after = 'code_if_expression',
+    code_statement_with_expression = dict(
+        match = MM(
+            PK('if'),
+            PK('elif'),
+            PK('while'),
+        ),
+        after = 'code_statement_with_expression_content',
     ),
-    code_if_expression = dict(
+    code_statement_with_expression_content = dict(
         match = PythonExpressionNoColonMatcher(),
         after = 'code_colon',
     ),
     code_colon = dict(
-        match = MRE(':'),
+        match = MRE('\s*:'),
         after = 'after_code_colon',
     ),
     after_code_colon = dict(
         match = (
             'line_end',
-            'inline',
+            'continue_inline',
         ),
+    ),
+    code_semi_compound_statement = dict(
+        match = MM(
+            PK('else'),
+            PK('try'),
+        ),
+        after = 'code_colon',
     ),
     code_simple_statement = dict(
         match = PythonExpressionMatcher(),

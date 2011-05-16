@@ -45,6 +45,8 @@ Things TODO I left behind for later, not those "yet to be touched".
 
 1. Refactor python-code matchers - merge duplicated code, rethink how they should work
 1. Unit-test error handling
+1. Reorganize and clean up code in parser
+1. Reorganize and clean up lexer (and think of better names for code-related tokens)
 
 Copyright and licence
 ---------------------
