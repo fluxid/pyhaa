@@ -118,21 +118,21 @@ class CodeGen:
             node = next(current_iter, None)
             if node is None:
                 if node_stack:
-                    self.call_node_handling_function('close', node_stack.pop())
+                    self.node_close(node_stack.pop())
                 if not iter_stack:
                     while node_stack:
-                        self.call_node_handling_function('close', node_stack.pop())
+                        self.node_close(node_stack.pop())
                     break
                 current_iter = iter_stack.pop()
                 continue
 
-            self.call_node_handling_function('open', node)
+            self.node_open(node)
             if isinstance(node, structure.PyhaaParent):
                 node_stack.append(node)
                 iter_stack.append(current_iter)
                 current_iter = iter(node)
             else:
-                self.call_node_handling_function('close', node)
+                self.node_close(node)
 
     def write_structure(self):
         code_level = 0
@@ -151,6 +151,12 @@ class CodeGen:
         self.write_file_header()
         self.write_imports()
         self.write_structure()
+
+    def node_open(self, node):
+        self.call_node_handling_function('open', node)
+
+    def node_close(self, node):
+        self.call_node_handling_function('close', node)
 
     def call_node_handling_function(self, prefix, node):
         if node is None: # pragma: no cover
