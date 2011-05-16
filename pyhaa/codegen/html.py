@@ -73,14 +73,15 @@ class HTMLCodeGen(CodeGen):
         if self.simple_bytes:
             self.write_io(
                 'yield {}'.format(repr(b''.join(self.simple_bytes))),
-                flush_simple_bytes = False
+                flush_simple_bytes = False,
+                indent_level = self.simple_bytes_indent_level,
             )
             del self.simple_bytes[::]
 
-    def write_io(self, *args, flush_simple_bytes = True):
+    def write_io(self, *args, flush_simple_bytes = True, **kwargs):
         if flush_simple_bytes:
             self.flush_simple_bytes()
-        return super().write_io(*args)
+        return super().write_io(*args, **kwargs)
 
     def write(self, *args, **kwargs):
         super().write(*args, **kwargs)

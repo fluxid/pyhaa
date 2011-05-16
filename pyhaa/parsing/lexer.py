@@ -28,6 +28,7 @@ from .errors import PyhaaSyntaxError, SYNTAX_INFO
 from .matchers import (
     ConstantLength,
     PythonDictMatcher,
+    PythonExpressionBaseMatcher,
     PythonExpressionMatcher,
     PythonExpressionNoColonMatcher,
     PK,
@@ -237,7 +238,7 @@ pyhaa_lexer = dict(
         after = 'code_colon',
     ),
     code_simple_statement = dict(
-        match = PythonExpressionMatcher(),
+        match = PythonExpressionBaseMatcher(),
         after = 'line_end',
     ),
     code_expression_start = dict(

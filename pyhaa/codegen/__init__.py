@@ -18,6 +18,7 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import itertools
 import logging
 import re
 
@@ -71,10 +72,12 @@ class CodeGen:
         if self.indent_level and times:
             self.indent_level -= min(times, self.indent_level)
 
-    def write_io(self, *args):
+    def write_io(self, *args, indent_level=None):
+        if indent_level is None:
+            indent_level = self.indent_level
         for arg in args:
             if self.indent_level:
-                self.io.write(self.indent_level * self.indent_string)
+                self.io.write(indent_level * self.indent_string)
             self.io.write(arg.encode(self.encoding))
             self.io.write(self.newline)
     
@@ -154,9 +157,13 @@ class CodeGen:
 
     def node_open(self, node):
         self.call_node_handling_function('open', node)
+        if isinstance(node, structure.CompoundStatement):
+            self.indent()
 
     def node_close(self, node):
         self.call_node_handling_function('close', node)
+        if isinstance(node, structure.CompoundStatement):
+            self.dedent()
 
     def call_node_handling_function(self, prefix, node):
         if node is None: # pragma: no cover
@@ -165,6 +172,17 @@ class CodeGen:
         function = getattr(self, function_name, None)
         if function:
             function(node)
+            log.debug("Found function %s for node %r.", function_name, node)
         else:
             log.warning("Couldn't find function %s for node %r.", function_name, node)
+
+    def handle_open_simple_statement(self, node):
+        self.write_io(
+            node.content,
+        )
+
+    def handle_open_compound_statement(self, node):
+        self.write_io(
+            node.content,
+        )
 

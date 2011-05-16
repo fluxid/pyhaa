@@ -287,7 +287,8 @@ class PyhaaParser(Parser):
         self.current_opened += 1
 
     def handle_code_simple_statement(self, match):
-        self.tree.append(structure.Statement(content = match))
+        self.tree.append(structure.SimpleStatement(content = match))
+        self.current_opened += 1
 
     def indent_de(self, times=1):
         '''

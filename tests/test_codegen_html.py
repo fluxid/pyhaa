@@ -110,3 +110,21 @@ class TestCodegenHtml(TestCase):
             '&amp;&amp;',
         )
 
+    def test_while_if(self):
+        tree = parse_string(jl(
+            '-my_iter = iter(context)',
+            '%ul',
+            '  -while True:',
+            '    -value = next(my_iter)',
+            '    -if not value:',
+            '      -break',
+            '    %li =value',
+        ))
+        code = codegen_template(tree)
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[['1', '2', '3']])
+        self.assertEqual(
+            rendered,
+            '<ul><li>1</li><li>2</li><li>3</li></ul>',
+        )
+
