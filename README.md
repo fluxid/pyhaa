@@ -43,18 +43,23 @@ TODO
 
 Things TODO I left behind for later, not those "yet to be touched".
 
-1. Refactor python-code matchers - merge duplicated code, rethink how they should work
-1. Unit-test error handling
-1. Reorganize and clean up code in parser
-1. Reorganize and clean up lexer (and think of better names for code-related tokens)
+1. Refactor python-code matchers - rethink how to handle tokenizer readahead
+1. Better unit-test error handling
+1. Reorganize and clean up code in parser, lexer and think of better names for code-related tokens
 1. Think how to handle this code:
    ```
    -while True:
-     %li
+     %p
        -break
    ```
-   (This results in opened, but not closed li tag...)
-1. Handle errors raised in exec (while compiling template) more correctly
+   or
+   ```
+   %p
+     -return
+   ```
+   (This results in opened, but not closed p tag...) try..finally? Dumping all tag closes just before break/return?
+1. Handle errors raised in exec (while compiling template) more correctly (StopIteration
+   raised in the template code may cause strange behavior)
 
 Copyright and licence
 ---------------------
