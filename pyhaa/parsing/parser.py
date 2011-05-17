@@ -264,15 +264,30 @@ class PyhaaParser(Parser):
 
 
     # PYTHON CODE stuff
-    def handle_code_statement_expression(self, match):
+    def begin_statement(self, match):
         self.set_info('statement', match.group(1))
+
+    def handle_code_statement_expression(self, match):
+        self.begin_statement(match)
 
     def handle_code_statement_expression_content(self, match):
         self.set_info('statement_expression', match)
         self.continue_info('statement')
 
+    def handle_code_statement_for(self, match):
+        self.begin_statement(match)
+
+    def handle_code_statement_for_target(self, match):
+        self.set_info('statement_target', match)
+        self.continue_info('statement')
+
+    def handle_code_statement_for_expression(self, match):
+        self.set_info('statement_expression', match)
+        self.continue_info('statement')
+        self.continue_info('statement_target')
+
     def handle_code_statement(self, match):
-        self.set_info('statement', match.group(1))
+        self.begin_statement(match)
 
     def handle_code_colon(self, match):
         statement = self.get_info('statement', None)
@@ -280,7 +295,20 @@ class PyhaaParser(Parser):
         if statement in ('if', 'elif', 'while'):
             expression = self.get_info('statement_expression', None)
             assert expression
-            complete = statement + ' ' + expression + ':'
+            complete = '{} {}:'.format(
+                statement,
+                expression,
+            )
+        elif statement == 'for':
+            target = self.get_info('statement_target', None)
+            expression = self.get_info('statement_expression', None)
+            assert target
+            assert expression
+            complete = '{} {} in {}:'.format(
+                statement,
+                target,
+                expression,
+            )
         else:
             complete = statement + ':'
         self.tree.append(structure.CompoundStatement(content = complete))

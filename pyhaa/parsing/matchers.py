@@ -61,11 +61,18 @@ class ConstantLength(Matcher):
         return None
         
 
-class PythonExpressionBaseMatcher(Matcher):
+class PythonStatementMatcher(Matcher):
     match_bracket = None
     ast_check = True
     break_at_colon = False
     break_at_keyword = []
+
+    def __init__(self, break_at_colon = None, break_at_keyword = None):
+        if not break_at_keyword is None:
+            self.break_at_keyword = break_at_keyword
+
+        if not break_at_colon is None:
+            self.break_at_colon = break_at_colon
 
     def match(self, parser, line, pos):
         parser.cache_push()
@@ -173,7 +180,7 @@ class PythonExpressionBaseMatcher(Matcher):
         pass
 
 
-class PythonDictMatcher(PythonExpressionBaseMatcher):
+class PythonDictMatcher(PythonStatementMatcher):
     match_bracket = '{'
 
     def check_ast(self, parser, line, pos, ast_tree):
@@ -184,9 +191,18 @@ class PythonDictMatcher(PythonExpressionBaseMatcher):
             )
 
 
-class PythonExpressionMatcher(PythonExpressionBaseMatcher):
+class PythonExpressionMatcher(PythonStatementMatcher):
     def check_ast(self, parser, line, pos, ast_tree):
         if not (len(ast_tree.body) == 1 and isinstance(ast_tree.body[0], ast.Expr)):
+            raise PyhaaSyntaxError(
+                SYNTAX_INFO.INVALID_PYTHON_EXPRESSION,
+                parser,
+            )
+
+
+class PythonExpressionListMatcher(PythonStatementMatcher):
+    def check_ast(self, parser, line, pos, ast_tree):
+        if not (ast_tree.body and all(isinstance(item, ast.Expr) for item in ast_tree.body)):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.INVALID_PYTHON_EXPRESSION,
                 parser,
@@ -210,9 +226,12 @@ class PythonTargetMatcher(PythonExpressionMatcher):
             )
 
 
-def PK(value):
+def PK(value, spaces=False):
     '''
     Python keyword matcher - basicaly w word and any amount of whitespace
     '''
-    return MRE(r'({})\b\s*'.format(value))
+    regex = r'({})\b\s*'
+    if spaces:
+        regex = r'\s*' + regex
+    return MRE(regex.format(value))
 

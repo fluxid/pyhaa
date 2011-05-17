@@ -128,3 +128,29 @@ class TestCodegenHtml(TestCase):
             '<ul><li>1</li><li>2</li><li>3</li></ul>',
         )
 
+    def test_for(self):
+        tree = parse_string(jl(
+            '%ul',
+            '  -for value in context:',
+            '    %li =value',
+        ))
+        code = codegen_template(tree)
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[['1', '2', '3']])
+        self.assertEqual(
+            rendered,
+            '<ul><li>1</li><li>2</li><li>3</li></ul>',
+        )
+
+    def test_for_inline(self):
+        tree = parse_string(jl(
+            '%ul -for value in context: %li =value',
+        ))
+        code = codegen_template(tree)
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[['1', '2', '3']])
+        self.assertEqual(
+            rendered,
+            '<ul><li>1</li><li>2</li><li>3</li></ul>',
+        )
+

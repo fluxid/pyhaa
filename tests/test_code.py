@@ -102,3 +102,19 @@ class TestCode(TestCase):
         self.assertEqual(s1.content, 'try:')
         self.assertEqual(s2.content, 'else:')
 
+    def test_for_statement(self):
+        tree = parse_string(jl(
+            '-for a in range(10): %tag',
+            '-for(a)in(range(10)) :',
+            '  sup!',
+        ))
+        s1, s2 = tree
+        t1, = s1
+        t2, = s2
+        self.assert_(isinstance(s1, structure.CompoundStatement))
+        self.assert_(isinstance(s2, structure.CompoundStatement))
+        self.assert_(isinstance(t1, structure.Tag))
+        self.assert_(isinstance(t2, structure.Text))
+        self.assertEqual(s1.content, 'for a in range(10):')
+        self.assertEqual(s2.content, 'for (a) in (range(10)):')
+

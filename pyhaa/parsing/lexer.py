@@ -213,6 +213,7 @@ pyhaa_lexer = dict(
     code_statement_content = dict(
         match = (
             'code_statement_expression',
+            'code_statement_for',
             'code_statement',
             'code_statement_simple',
         ),
@@ -228,7 +229,25 @@ pyhaa_lexer = dict(
         after = 'code_statement_expression_content',
     ),
     code_statement_expression_content = dict(
-        match = matchers.PythonExpressionNoColonMatcher(),
+        match = matchers.PythonExpressionMatcher(break_at_colon=True),
+        after = 'code_colon',
+    ),
+
+    # for..in statement
+    code_statement_for = dict(
+        match = matchers.PK('for'),
+        after = 'code_statement_for_target',
+    ),
+    code_statement_for_target = dict(
+        match = matchers.PythonTargetMatcher(),
+        after = 'code_statement_for_in',
+    ),
+    code_statement_for_in = dict(
+        match = matchers.PK('in', True),
+        after = 'code_statement_for_expression',
+    ),
+    code_statement_for_expression = dict(
+        match = matchers.PythonExpressionListMatcher(break_at_colon=True),
         after = 'code_colon',
     ),
 
@@ -256,7 +275,7 @@ pyhaa_lexer = dict(
 
     # Any simple statement, including normal expressions
     code_statement_simple = dict(
-        match = matchers.PythonExpressionBaseMatcher(),
+        match = matchers.PythonStatementMatcher(),
         after = 'line_end',
     ),
 
