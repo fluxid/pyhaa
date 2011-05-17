@@ -88,6 +88,8 @@ class PyhaaParser(Parser):
     def on_bad_token(self):
         raise PyhaaSyntaxError(SYNTAX_INFO.SYNTAX_ERROR, self)
 
+
+    # BASICS
     def handle_indent(self, match):
         match = match.group(0)
         tabs = match.count('\t')
@@ -185,10 +187,38 @@ class PyhaaParser(Parser):
         self.creating_tag = False
         self.last_tas_name = None
 
+    def handle_inline(self, match):
+        self.end_tag()
+
     def handle_line_end(self, match):
         self.continue_info('expected_indent')
         self.end_tag()
 
+
+    # SMALL stuff
+    def handle_text(self, match):
+        text = match.group('value')
+        if self.escape_next:
+            # We escape text, but decode entities/unsescape first,
+            # we will escape it again at codegen level
+            text = entity_decode(text)
+        if isinstance(self.tree.current, structure.PyhaaParent):
+            children = self.tree.current.children
+            if children:
+                last_one = children[-1]
+                if isinstance(last_one, structure.Text) and last_one.escape == self.escape_next:
+                    last_one.content = last_one.content + ' ' + text
+                    return
+        self.tree.append(structure.Text(content = text, escape = self.escape_next))
+        # PyhaaSimpleContent is not openable, but we must "close" it explicitly when
+        # reindenting
+        self.current_opened += 1
+
+    def handle_html_raw_toggle(self, match):
+        self.set_info('escape_next', False)
+
+
+    # TAG stuff
     def handle_tag_name_start(self, match):
         self.begin_tag()
 
@@ -214,27 +244,8 @@ class PyhaaParser(Parser):
             )
         self.tree.current.id_ = entity_decode(match.group(0))
 
-    def handle_continue_inline(self, match):
-        self.end_tag()
 
-    def handle_text(self, match):
-        text = match.group('value')
-        if self.escape_next:
-            # We escape text, but decode entities/unsescape first,
-            # we will escape it again at codegen level
-            text = entity_decode(text)
-        if isinstance(self.tree.current, structure.PyhaaParent):
-            children = self.tree.current.children
-            if children:
-                last_one = children[-1]
-                if isinstance(last_one, structure.Text) and last_one.escape == self.escape_next:
-                    last_one.content = last_one.content + ' ' + text
-                    return
-        self.tree.append(structure.Text(content = text, escape = self.escape_next))
-        # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
-        # reindenting
-        self.current_opened += 1
-
+    # TAG ATTRIBUTES stuff
     def handle_tas_start(self, match):
         # Ensures that the last attribute-set is a dict so we can set attributes later
         self.tree.current.append_attributes(dict())
@@ -248,30 +259,20 @@ class PyhaaParser(Parser):
         self.tree.current.attributes_set[-1][self.last_tas_name] = entity_decode(match.group('value'))
         self.last_tas_name = None
 
-    def handle_tap_rest(self, match):
+    def handle_tap_content(self, match):
         self.tree.current.append_attributes(match)
 
-    def handle_html_escape_toggle(self, match):
-        self.set_info('escape_next', False)
 
-    def handle_code_expression_start(self, match):
-        self.continue_info('escape_next')
-
-    def handle_code_expression(self, match):
-        self.tree.append(structure.Expression(content = match, escape = self.escape_next))
-        # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
-        # reindenting
-        self.current_opened += 1
-
-    def handle_code_semi_compound_statement(self, match):
+    # PYTHON CODE stuff
+    def handle_code_statement_expression(self, match):
         self.set_info('statement', match.group(1))
 
-    def handle_code_statement_with_expression(self, match):
-        self.set_info('statement', match.group(1))
-
-    def handle_code_statement_with_expression_content(self, match):
+    def handle_code_statement_expression_content(self, match):
         self.set_info('statement_expression', match)
         self.continue_info('statement')
+
+    def handle_code_statement(self, match):
+        self.set_info('statement', match.group(1))
 
     def handle_code_colon(self, match):
         statement = self.get_info('statement', None)
@@ -286,10 +287,21 @@ class PyhaaParser(Parser):
         self.set_info('expected_indent', True)
         self.current_opened += 1
 
-    def handle_code_simple_statement(self, match):
+    def handle_code_statement_simple(self, match):
         self.tree.append(structure.SimpleStatement(content = match))
         self.current_opened += 1
 
+    def handle_code_expression_start(self, match):
+        self.continue_info('escape_next')
+
+    def handle_code_expression(self, match):
+        self.tree.append(structure.Expression(content = match, escape = self.escape_next))
+        # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
+        # reindenting
+        self.current_opened += 1
+
+
+    # Indenting
     def indent_de(self, times=1):
         '''
         Dedented line - times attribute means how many levels do we dedent

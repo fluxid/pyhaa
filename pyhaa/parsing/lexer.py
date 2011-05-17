@@ -25,14 +25,7 @@ from fxd.minilexer import (
 )
 
 from .errors import PyhaaSyntaxError, SYNTAX_INFO
-from .matchers import (
-    ConstantLength,
-    PythonDictMatcher,
-    PythonExpressionBaseMatcher,
-    PythonExpressionMatcher,
-    PythonExpressionNoColonMatcher,
-    PK,
-)
+from . import matchers
 
 
 def plexer_raise(eidd):
@@ -43,11 +36,14 @@ def plexer_raise(eidd):
 def plexer_pass(parser):
     pass
 
+
 pyhaa_lexer = dict(
     _begin = 'line',
+
+    # BASICS
     line = dict(
         match = (
-            'line_end',
+            'line_end', # Basically an empty line
             'indent',
         ),
     ),
@@ -57,15 +53,31 @@ pyhaa_lexer = dict(
     ),
     element = dict(
         match = (
+            'escape',
             'comment',
-            'tag_start',
+            'tag',
             'code_statement_start',
             'code_expression_start',
-            'html_escape_toggle',
-            'escape',
+            'html_raw_toggle',
             'text',
         ),
     ),
+    continue_inline = dict(
+        match = (
+            'line_end',
+            'inline',
+        ),
+    ),
+    inline = dict(
+        match = MRE('\s+'),
+        after = 'element',
+    ),
+    line_end = dict(
+        match = MRE('\s*$'),
+        after = 'line',
+    ),
+
+    # SMALL stuff
     escape = dict(
         match = MRE('\\\\\s*'),
         after = 'text',
@@ -74,82 +86,75 @@ pyhaa_lexer = dict(
         match = MRE('(?P<value>.+?)[ \t]*$'),
         after = 'line_end',
     ),
-    html_escape_toggle = dict(
+    html_raw_toggle = dict(
         match = MRE('\?\s*'),
         after = 'element',
     ),
-    tag_start = dict(
+    comment = dict(
+        match = MRE('!\s*(?P<comment>[^\s]*)\s*$'),
+        after = 'line',
+    ),
+
+    # TAG stuff
+    tag = dict(
         match = (
             'tag_name_start',
             'tag_class_start',
             'tag_id_start',
         ),
     ),
+    tag_continue = dict(
+        match = (
+            'tag_class_start',
+            'tag_id_start',
+            'tag_after',
+        ),
+    ),
+
     tag_name_start = dict(
         match = MS('%'),
         after = 'tag_name',
     ),
     tag_name = dict(
-        match = MRE('[^\.\#\(\{\s]*'),
-        after = 'tag_options',
+        match = MRE('[^\.\#\(\{\s]*'), # Star - there may be no tag name - div by default
+        after = 'tag_continue',
     ),
+
     tag_class_start = dict(
         match = MS('.'),
         after = 'tag_class_name',
     ),
     tag_class_name = dict(
         match = MRE('[^\.\#\(\{\s]+'),
-        after = 'tag_options',
+        after = 'tag_continue',
         on_fail = plexer_raise(SYNTAX_INFO.EXPECTED_CLASSNAME),
     ),
+
     tag_id_start = dict(
         match = MS('#'),
         after = 'tag_id_name',
     ),
     tag_id_name = dict(
         match = MRE('[^\.\#\(\{\s]+'),
-        after = 'tag_options',
+        after = 'tag_continue',
         on_fail = plexer_raise(SYNTAX_INFO.EXPECTED_IDNAME),
     ),
-    tag_options = dict(
-        match = (
-            'tag_id_start',
-            'tag_class_start',
-            'tag_after_attributes',
-        ),
-    ),
-    tag_after_attributes = dict(
-        match = (
-            'tag_attributes',
-            #'spaceset',
-            'line_end',
-            'continue_inline',
-        ),
-    ),
-    continue_inline = dict(
-        match = MRE('\s+'),
-        after = 'inline',
-    ),
-    inline = dict(
-        match = (
-            'element',
-            'line_end',
-        ),
-    ),
-    line_end = dict(
-        match = MRE('\s*$'),
-        after = 'line',
-    ),
-    comment = dict(
-        match = MRE('!\s*(?P<comment>[^\s]*)\s*$'),
-        after = 'line',
-    ),
+
+    # TAG ATTRIBUTES stuff
     tag_attributes = dict(
         match = (
             'tas_start', # tas - short for tag_attributes_simple
             'tap_start', # tap - short for tag_attributes_python
         ),
     ),
+    tag_after = dict(
+        match = (
+            'tag_attributes',
+            'continue_inline',
+        ),
+    ),
+
+    # TAS - Tag Attributes Simple
     tas_start = dict(
         match = MS('('),
         after = 'tas_inside',
@@ -182,44 +187,62 @@ pyhaa_lexer = dict(
     ),
     tas_end = dict(
         match = MRE('\s*\)'),
-        after = 'tag_after_attributes',
+        after = 'tag_after',
     ),
     tas_line_end = dict(
         match = MRE('\s*$'),
         after = 'tas_inside',
     ),
+
+    # TAP - Tag Attributes Python
     tap_start = dict(
-        match = ConstantLength(MS('{'), 0),
-        after = 'tap_rest',
+        match = matchers.ConstantLength(MS('{'), 0),
+        after = 'tap_content',
         on_fail = plexer_pass,
     ),
-    tap_rest = dict(
-        match = PythonDictMatcher(),
-        after = 'tag_after_attributes',
+    tap_content = dict(
+        match = matchers.PythonDictMatcher(),
+        after = 'tag_after',
     ),
+
+    # PYTHON CODE stuff
     code_statement_start = dict(
         match = MRE('\-\s*'),
-        after = 'code_statement',
+        after = 'code_statement_content',
     ),
-    code_statement = dict(
+    code_statement_content = dict(
         match = (
-            'code_statement_with_expression',
-            'code_semi_compound_statement',
-            'code_simple_statement',
+            'code_statement_expression',
+            'code_statement',
+            'code_statement_simple',
         ),
     ),
-    code_statement_with_expression = dict(
+
+    # Statements including simple expression before colon
+    code_statement_expression = dict(
         match = MM(
-            PK('if'),
-            PK('elif'),
-            PK('while'),
+            matchers.PK('if'),
+            matchers.PK('elif'),
+            matchers.PK('while'),
         ),
-        after = 'code_statement_with_expression_content',
+        after = 'code_statement_expression_content',
     ),
-    code_statement_with_expression_content = dict(
-        match = PythonExpressionNoColonMatcher(),
+    code_statement_expression_content = dict(
+        match = matchers.PythonExpressionNoColonMatcher(),
         after = 'code_colon',
     ),
+
+    # Simple compound statements: name and colon after it
+    code_statement = dict(
+        match = MM(
+            matchers.PK('else'),
+            matchers.PK('try'),
+            matchers.PK('finally'),
+        ),
+        after = 'code_colon',
+    ),
+
+    # Colon always after a compund statement
     code_colon = dict(
         match = MRE('\s*:'),
         after = 'after_code_colon',
@@ -230,23 +253,20 @@ pyhaa_lexer = dict(
             'continue_inline',
         ),
     ),
-    code_semi_compound_statement = dict(
-        match = MM(
-            PK('else'),
-            PK('try'),
-        ),
-        after = 'code_colon',
-    ),
-    code_simple_statement = dict(
-        match = PythonExpressionBaseMatcher(),
+
+    # Any simple statement, including normal expressions
+    code_statement_simple = dict(
+        match = matchers.PythonExpressionBaseMatcher(),
         after = 'line_end',
     ),
+
+    # Expression which returns value to be inserted into template
     code_expression_start = dict(
         match = MRE('\=\s*'),
         after = 'code_expression',
     ),
     code_expression = dict(
-        match = PythonExpressionMatcher(),
+        match = matchers.PythonExpressionMatcher(),
         after = 'line_end',
     ),
 )
