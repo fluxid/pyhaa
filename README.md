@@ -17,6 +17,8 @@ Goals
 
 1. HTML and etree output (for easy generation of XML)
 1. Templating basics: inheritance, partials
+1. Macros and constants for pre-codegen "dynamics"
+1. Allow to write clean, but strict template code
 
 Decisions
 ---------
@@ -41,25 +43,31 @@ Decisions
 TODO
 ----
 
-Things TODO I left behind for later, not those "yet to be touched".
+Things I left behind for later, not those "yet to be touched".
 
 1. Refactor python-code matchers - rethink how to handle tokenizer readahead
 1. Better unit-test error handling
 1. Reorganize and clean up code in parser, lexer and think of better names for code-related tokens
-1. Think how to handle this code:
-   ```
-   -while True:
-     %p
-       -break
-   ```
+1. Handle this code correctly:
+       -while True:
+         %p
+           -break
    or
-   ```
-   %p
-     -return
-   ```
-   (This results in opened, but not closed p tag...) try..finally? Dumping all tag closes just before break/return?
+       %p
+         -return
+   (This results in opened, but not closed p tag. `try..finally` ? Dumping all tag-closes just before break/return?)
 1. Handle errors raised in exec (while compiling template) more correctly (StopIteration
    raised in the template code may cause strange behavior)
+
+What still needs some thought
+-----------------------------
+
+Things I didn't yet start implementing
+
+1. How should inheritance actually work? How about creating dynamically a new type and instantiating it immediately?
+1. How should template loading work?
+1. What syntax for module/class level code? (How to differentiate code meant to be placed on module or class level?
+   When should be default `body` function opened?)
 
 Copyright and licence
 ---------------------
