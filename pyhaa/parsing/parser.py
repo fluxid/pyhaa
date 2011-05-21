@@ -53,6 +53,11 @@ class PyhaaParser(Parser):
         self.continue_temporary = set()
         self.temporary_info = dict()
 
+        self.constants = {
+            'sp': ' ',
+            'html5': ('<!DOCTYPE html>', False),
+        }
+
     # Below functions are used to hold temporary state
 
     def get_info(self, name, default):
@@ -198,7 +203,10 @@ class PyhaaParser(Parser):
     # SMALL stuff
     def handle_text(self, match):
         text = match.group('value')
-        if self.escape_next:
+        self.insert_text(text, self.escape_next)
+
+    def insert_text(self, text, escape):
+        if escape:
             # We escape text, but decode entities/unsescape first,
             # we will escape it again at codegen level
             text = entity_decode(text)
@@ -206,16 +214,25 @@ class PyhaaParser(Parser):
             children = self.tree.current.children
             if children:
                 last_one = children[-1]
-                if isinstance(last_one, structure.Text) and last_one.escape == self.escape_next:
-                    last_one.content = last_one.content + ' ' + text
+                if isinstance(last_one, structure.Text) and last_one.escape == escape:
+                    last_one.content = last_one.content.rstrip() + ' ' + text.lstrip()
                     return
-        self.tree.append(structure.Text(content = text, escape = self.escape_next))
+        self.tree.append(structure.Text(content = text, escape = escape))
         # PyhaaSimpleContent is not openable, but we must "close" it explicitly when
         # reindenting
         self.current_opened += 1
 
     def handle_html_raw_toggle(self, match):
         self.set_info('escape_next', False)
+
+    def handle_constant(self, match):
+        key = match.group('key')
+        value = self.constants.get(key)
+        escape = True
+        if isinstance(value, (tuple, list)):
+            value, escape = value
+        if value:
+            self.insert_text(value, escape)
 
 
     # TAG stuff

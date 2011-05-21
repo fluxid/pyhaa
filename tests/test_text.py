@@ -25,6 +25,7 @@ from pyhaa import (
 )
 
 from pyhaa.structure import (
+    Tag,
     Text,
 )
 
@@ -132,4 +133,38 @@ class TestText(TestCase):
         self.assertEqual(text1.content, '&')
         self.assertEqual(text2.content, '&amp; &amp;')
         self.assertEqual(text3.content, '&')
+
+    def test_constant(self):
+        tree = parse_string(jl(
+            '!html5',
+            '!sp',
+        ))
+        text1, text2 = tree
+        self.assertEqual(text1.escape, False)
+        self.assertEqual(text2.escape, True)
+        self.assertEqual(text1.content, '<!DOCTYPE html>')
+        self.assertEqual(text2.content, ' ')
+
+    def test_comment(self):
+        # Best place for this test...
+        tree = parse_string(jl(
+            'test2',
+            ';',
+            '; ',
+            '%',
+            '  ;a',
+            '  Text',
+            ';a',
+            '; a',
+            ';a ',
+            '; a ',
+            ';',
+            'test2',
+        ))
+        t1, t2, t3 = tree
+        t4, = t2
+        self.assertTrue(isinstance(t1, Text))
+        self.assertTrue(isinstance(t2, Tag))
+        self.assertTrue(isinstance(t3, Text))
+        self.assertTrue(isinstance(t4, Text))
 

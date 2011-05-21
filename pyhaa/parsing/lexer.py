@@ -59,6 +59,7 @@ pyhaa_lexer = dict(
             'code_statement_start',
             'code_expression_start',
             'html_raw_toggle',
+            'constant',
             'text',
         ),
     ),
@@ -91,8 +92,12 @@ pyhaa_lexer = dict(
         after = 'element',
     ),
     comment = dict(
-        match = MRE('!\s*(?P<comment>[^\s]*)\s*$'),
+        match = MRE(';\s*(?P<comment>[^\s]*)\s*$'),
         after = 'line',
+    ),
+    constant = dict(
+        match = MRE('!(?P<key>[^\s]+)'),
+        after = 'line_end',
     ),
 
     # TAG stuff
