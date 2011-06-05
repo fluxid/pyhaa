@@ -18,6 +18,8 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import logging
+
 from  .. import structure
 from ..utils.cgrt_common import (
     close_tag,
@@ -27,6 +29,8 @@ from ..utils.cgrt_common import (
 from ..utils.encode import single_encode
 
 from . import CodeGen
+
+log = logging.getLogger(__name__)
 
 class HTMLCodeGen(CodeGen):
     superclass_name = 'HTMLTemplate'
@@ -80,6 +84,7 @@ class HTMLCodeGen(CodeGen):
 
     def write_io(self, *args, flush_simple_bytes = True, **kwargs):
         if flush_simple_bytes:
+            log.debug('Flushing simple bytes')
             self.flush_simple_bytes()
         return super().write_io(*args, **kwargs)
 
@@ -112,12 +117,15 @@ class HTMLCodeGen(CodeGen):
             self.tag_name_stack.append(name)
 
     def close_tag(self):
+        tag_name = self.tag_name_stack.pop()
+        log.debug('closing tag %s', tag_name)
         self.write_simple_bytes(
-            b''.join(close_tag(self.tag_name_stack.pop())),
+            b''.join(close_tag(tag_name)),
         )
 
     def handle_open_tag(self, node):
         self_close = self.tag_is_self_closing(node)
+        self.autoclose_open_node(node)
         if self.tag_is_static(node):
             self.open_tag(
                 node.name,
@@ -145,6 +153,7 @@ class HTMLCodeGen(CodeGen):
             )
 
     def handle_close_tag(self, node):
+        self.autoclose_close_node()
         if self.tag_is_self_closing(node):
             return
         if self.tag_is_static(node):
@@ -173,4 +182,17 @@ class HTMLCodeGen(CodeGen):
 
     def byterepr(self, value):
         return repr(single_encode(value, True, True, self.encoding))
+
+    # Autoclosing
+    def autoclose_close_func(self):
+        # Save state
+        tmp_tags = list(self.tag_name_stack)
+        super().autoclose_close_func()
+        self.tag_name_stack = tmp_tags
+
+    def autoclose_close_loop(self):
+        # Save state
+        tmp_tags = list(self.tag_name_stack)
+        super().autoclose_close_loop()
+        self.tag_name_stack = tmp_tags
 

@@ -63,7 +63,16 @@ class CodeGen:
         self.template_name = template_name
         self.class_name = utils.camel(template_name)
 
+        # What to autoclose in case of return, break or continue statements
+        # For returns
+        self.func_stack = []
+        # For continues and breaks
+        self.loop_stack = []
+        # Whether we're in the process of autoclosing nodes
+        self.autoclosing_now = False
+
         self.indent_level = 0
+        self.ignore_code_level = 0
 
     def indent(self):
         self.indent_level += 1
@@ -75,6 +84,13 @@ class CodeGen:
     def write_io(self, *args, indent_level=None):
         if indent_level is None:
             indent_level = self.indent_level
+
+        if self.ignore_code_level:
+            if indent_level >= self.ignore_code_level:
+                return
+            if self.indent_level < self.ignore_code_level:
+                self.ignore_code_level = 0
+
         for arg in args:
             if self.indent_level:
                 self.io.write(indent_level * self.indent_string)
@@ -109,6 +125,7 @@ class CodeGen:
         self.write_io(
             'def {}(self, context):'.format(name),
         )
+        self.autoclose_open_func()
         self.indent()
 
     def write_root_node(self, node):
@@ -171,18 +188,87 @@ class CodeGen:
         function_name = name_node_handling_function(prefix, node)
         function = getattr(self, function_name, None)
         if function:
-            function(node)
             log.debug("Found function %s for node %r.", function_name, node)
+            function(node)
         else:
             log.warning("Couldn't find function %s for node %r.", function_name, node)
 
     def handle_open_simple_statement(self, node):
+        if node.name == 'return':
+            log.debug('CLOSING FUNC')
+            self.autoclose_close_func()
+            log.debug('CLOSED FUNC')
+        elif node.name in ('break', 'continue'):
+            log.debug('CLOSING LOOP')
+            self.autoclose_close_loop()
+            log.debug('CLOSED LOOP')
         self.write_io(
             node.content,
         )
+        if node.name in ('return', 'break', 'continue'):
+            self.ignore_code_level = self.indent_level
 
     def handle_open_compound_statement(self, node):
         self.write_io(
             node.content,
         )
+        # TODO: support def (when we start to understand it as CompoundStatement)
+        if node.name in ('for', 'while'):
+            log.debug('OPENING LOOP')
+            self.autoclose_open_loop()
+
+    def handle_close_compound_statement(self, node):
+        # TODO: support def (when we start to understand it as CompoundStatement)
+        if node.name in ('for', 'while'):
+            log.debug('OPENING LOOP')
+            self.autoclose_pop_loop()
+
+    # Autoclosing
+    def autoclose_open_func(self):
+        self.func_stack.append([])
+
+    def autoclose_open_loop(self):
+        self.loop_stack.append([])
+
+    def autoclose_nodes(self, node_stack):
+        self.autoclosing_now = True
+        for node in reversed(node_stack):
+            self.node_close(node)
+        self.autoclosing_now = False
+
+    def autoclose_close_func(self):
+        # Subclasses should clone internal state here if any of the closing functions modify it
+        if self.func_stack:
+            self.autoclose_nodes(self.func_stack[-1])
+
+    def autoclose_close_loop(self):
+        # Subclasses should clone internal state here if any of the closing functions modify it
+        if self.loop_stack:
+            self.autoclose_nodes(self.loop_stack[-1])
+
+    def autoclose_pop_func(self):
+        if self.func_stack:
+            self.func_stack.pop()
+
+    def autoclose_pop_loop(self):
+        if self.loop_stack:
+            self.loop_stack.pop()
+
+    def autoclose_open_node(self, node):
+        if self.func_stack:
+            self.func_stack[-1].append(node)
+        if self.loop_stack:
+            self.loop_stack[-1].append(node)
+
+    def autoclose_close_node(self):
+        if self.autoclosing_now:
+            return
+        if self.func_stack:
+            node_stack = self.func_stack[-1]
+            if node_stack:
+                node_stack.pop()
+        if self.loop_stack:
+            node_stack = self.loop_stack[-1]
+            if node_stack:
+                node_stack.pop()
 

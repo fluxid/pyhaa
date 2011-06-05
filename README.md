@@ -48,8 +48,6 @@ Things I left behind for later, not those "yet to be touched".
 1. Refactor python-code matchers - rethink how to handle tokenizer readahead
 1. Better unit-test error handling
 1. Reorganize and clean up code in parser, lexer and think of better names for code-related tokens
-1. Handle this code correctly: `-while 1: %p -break` or `%p -return`
-   (This results in opened, but not closed p tag. `try..finally` ? Dumping all tag-closes just before break/return?)
 1. Handle errors raised in exec (while compiling template) more correctly (StopIteration
    raised in the template code may cause strange behavior)
 1. Find better way for inserting whitespaces (`!sp` syntax is too a bit ugly)
