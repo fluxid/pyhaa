@@ -154,3 +154,28 @@ class TestCodegenHtml(TestCase):
             '<ul><li>1</li><li>2</li><li>3</li></ul>',
         )
 
+    def test_autoclose(self):
+        tree = parse_string(jl(
+            '%a',
+            '  -while True:',
+            '    %b',
+            '      -break',
+            '  -for i in range(3):',
+            '    %c',
+            '      =str(i)',
+            '      -if i == 0:',
+            '        %d',
+            '          -continue',
+            '      -else:',
+            '        %e{"attr":True}',
+            '          -break',
+            '  -return',
+        ))
+        code = codegen_template(tree)
+        template = compile_template(code)
+        rendered = html_render_to_string(template, args=[None])
+        self.assertEqual(
+            rendered,
+            '<a><b></b><c>0<d></d></c><c>1<e attr="attr"></e></c></a>',
+        )
+
