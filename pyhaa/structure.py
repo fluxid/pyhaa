@@ -18,6 +18,10 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import re
+
+RE_FIRST_KEYWORD = re.compile(r'(\w+)\b\s*')
+
 # Base classes
 
 class PyhaaParent:
@@ -109,6 +113,12 @@ class PyhaaParentNode(PyhaaParent, PyhaaNode):
     pass
 
 
+class PyhaaStatement:
+    def __init__(self, name = None, **kwargs):
+        self.name = name.strip().lower() if name else None
+        super().__init__(**kwargs)
+
+
 class ModuleLevel:
     '''
     Allows node to be on a module level (i.e. module-level code like import)
@@ -166,12 +176,32 @@ class Expression(PyhaaEscapeableContent):
     pass
 
 
-class SimpleStatement(PyhaaSimpleContent):
-    pass
-
-
-class CompoundStatement(PyhaaParentNode, PyhaaSimpleContent):
-    def __init__(self, name = None, **kwargs):
-        self.name = name.strip().lower() if name else None
+class SimpleStatement(PyhaaStatement, PyhaaSimpleContent):
+    def __init__(self, **kwargs):
+        content = kwargs.get('content')
+        name = None
+        if content:
+            m = RE_FIRST_KEYWORD.match(content)
+            if m:
+                keyword = m.group(1)
+                if keyword in (
+                    'assert',
+                    'pass',
+                    'del',
+                    'return',
+                    'yield',
+                    'raise',
+                    'break',
+                    'continue',
+                    'import',
+                    'global',
+                    'nonlocal',
+                ):
+                    name = keyword
+        kwargs['name'] = name
         super().__init__(**kwargs)
+
+
+class CompoundStatement(PyhaaStatement, PyhaaParentNode, PyhaaSimpleContent):
+    pass
 

@@ -125,3 +125,17 @@ class TestCode(TestCase):
         self.assertEqual(s1.name, 'for')
         self.assertEqual(s2.name, 'for')
 
+    def test_simple_statement_name(self):
+        tree = parse_string(jl(
+            '-return(1)',
+            '-break',
+            '-assert False \t ',
+        ))
+        s1, s2, s3 = tree
+        self.assert_(isinstance(s1, structure.SimpleStatement))
+        self.assert_(isinstance(s2, structure.SimpleStatement))
+        self.assert_(isinstance(s3, structure.SimpleStatement))
+        self.assertEqual(s1.name, 'return')
+        self.assertEqual(s2.name, 'break')
+        self.assertEqual(s3.name, 'assert')
+
