@@ -52,6 +52,8 @@ Things I left behind for later, not those "yet to be touched".
    (This results in opened, but not closed p tag. `try..finally` ? Dumping all tag-closes just before break/return?)
 1. Handle errors raised in exec (while compiling template) more correctly (StopIteration
    raised in the template code may cause strange behavior)
+1. Find better way for inserting whitespaces (`!sp` syntax is too a bit ugly)
+1. Make setting tag attributes from variable easier (currently only dict-comprehension is possible)
 
 What still needs some thought
 -----------------------------
