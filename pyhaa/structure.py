@@ -106,8 +106,7 @@ class PyhaaEscapeableContent(PyhaaSimpleContent):
 
 
 class PyhaaParentNode(PyhaaParent, PyhaaNode):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    pass
 
 
 class ModuleLevel:
@@ -172,5 +171,7 @@ class SimpleStatement(PyhaaSimpleContent):
 
 
 class CompoundStatement(PyhaaParentNode, PyhaaSimpleContent):
-    pass
+    def __init__(self, name = None, **kwargs):
+        self.name = name.strip().lower() if name else None
+        super().__init__(**kwargs)
 

@@ -85,6 +85,9 @@ class TestCode(TestCase):
         self.assertEqual(s1.content, 'if (1):')
         self.assertEqual(s2.content, 'elif True:')
         self.assertEqual(s3.content, 'while False:')
+        self.assertEqual(s1.name, 'if')
+        self.assertEqual(s2.name, 'elif')
+        self.assertEqual(s3.name, 'while')
 
     def test_else_try_statements(self):
         tree = parse_string(jl(
@@ -101,6 +104,8 @@ class TestCode(TestCase):
         self.assert_(isinstance(t2, structure.Text))
         self.assertEqual(s1.content, 'try:')
         self.assertEqual(s2.content, 'else:')
+        self.assertEqual(s1.name, 'try')
+        self.assertEqual(s2.name, 'else')
 
     def test_for_statement(self):
         tree = parse_string(jl(
@@ -117,4 +122,6 @@ class TestCode(TestCase):
         self.assert_(isinstance(t2, structure.Text))
         self.assertEqual(s1.content, 'for a in range(10):')
         self.assertEqual(s2.content, 'for (a) in (range(10)):')
+        self.assertEqual(s1.name, 'for')
+        self.assertEqual(s2.name, 'for')
 

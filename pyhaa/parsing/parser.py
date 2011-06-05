@@ -328,7 +328,7 @@ class PyhaaParser(Parser):
             )
         else:
             complete = statement + ':'
-        self.tree.append(structure.CompoundStatement(content = complete))
+        self.tree.append(structure.CompoundStatement(name = statement, content = complete))
         self.set_info('expected_indent', True)
         self.current_opened += 1
 
