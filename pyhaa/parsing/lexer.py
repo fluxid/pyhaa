@@ -256,12 +256,11 @@ pyhaa_lexer = dict(
         after = 'code_colon',
     ),
 
-    # Simple compound statements: name and colon after it
+    # Simple compound statements: name and colon immediately after it
     code_statement = dict(
         match = MM(
+            # We allow only else at this moment, at least for now
             matchers.PK('else'),
-            matchers.PK('try'),
-            matchers.PK('finally'),
         ),
         after = 'code_colon',
     ),

@@ -39,6 +39,9 @@ Decisions
 1. Use as much of Python internals as possible: compile templates into actually inheritable classes
 1. Yield instead of writing into io objects
 1. Encode into given charset BEFORE compiling template to python code
+1. Disallow class definition, function (at function level) and exception handling in template
+   code - mostly for the sake of simplicity but also not to put too complicated code into templates.
+   This may change in the future.
 
 TODO
 ----
