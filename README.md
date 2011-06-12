@@ -53,6 +53,7 @@ Things I left behind for later, not those "yet to be touched".
 1. Reorganize and clean up code in parser a bit more
 1. Find better way for inserting whitespaces (`!sp` syntax is too a bit ugly)
 1. Make setting tag attributes from variable easier (currently only dict-comprehension is possible)
+1. Think how to support preformatted text blocks blocks (inline javascript, &lt;pre&gt; blocks etc)
 
 What still needs some thought
 -----------------------------
