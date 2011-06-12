@@ -23,6 +23,7 @@ import io
 from .codegen.html import HTMLCodeGen
 from .parsing.lexer import pyhaa_lexer
 from .parsing.parser import PyhaaParser
+from .runtime import decapsulate_exceptions, EncapsulatedException
 from .utils import iter_flatten
 
 __all__ = (
@@ -69,7 +70,8 @@ def html_render_to_iterator(template, function_name=None, args=None, kwargs=None
     return iterator
 
 def html_render_to_string(template, *args, **kwargs):
-    iterator = html_render_to_iterator(template, *args, **kwargs)
-    rendered = b''.join(iter_flatten(iterator)).decode(template.encoding)
-    return rendered
+    with decapsulate_exceptions():
+        iterator = html_render_to_iterator(template, *args, **kwargs)
+        rendered = b''.join(iter_flatten(iterator)).decode(template.encoding)
+        return rendered
 

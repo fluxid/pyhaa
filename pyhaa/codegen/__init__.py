@@ -47,6 +47,7 @@ class CodeGen:
     superclass_name = ''
     imports = (
         'from pyhaa.utils.encode import single_encode as _ph_single_encode',
+        'from pyhaa.runtime import encapsulate_exceptions as _ph_encapsulate_exceptions',
     )
 
     def __init__(self, structure, io, **kwargs):
@@ -74,11 +75,12 @@ class CodeGen:
         self.indent_level = 0
         self.ignore_code_level = 0
 
-    def indent(self):
-        self.indent_level += 1
+    def indent(self, times=1):
+        if times > 0:
+            self.indent_level += times
 
     def dedent(self, times=1):
-        if self.indent_level and times:
+        if self.indent_level and times > 0:
             self.indent_level -= min(times, self.indent_level)
 
     def write_io(self, *args, indent_level=None):
@@ -121,12 +123,19 @@ class CodeGen:
             *self.imports
         )
 
-    def write_template_function(self, name):
+    def open_template_function(self, name):
         self.write_io(
             'def {}(self, context):'.format(name),
         )
+        self.indent()
+        self.write_io(
+            'with _ph_encapsulate_exceptions():',
+        )
         self.autoclose_open_func()
         self.indent()
+
+    def close_template_function(self):
+        self.dedent(2)
 
     def write_root_node(self, node):
         # In this case as "root node" we mean node which has tree root as parent
@@ -162,7 +171,7 @@ class CodeGen:
                 code_level = 1
 
             if code_level == 1 and not isinstance(node, structure.ClassLevel):
-                self.write_template_function('body')
+                self.open_template_function('body')
                 code_level = 2
 
             self.write_root_node(node)

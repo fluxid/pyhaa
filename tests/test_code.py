@@ -89,9 +89,9 @@ class TestCode(TestCase):
         self.assertEqual(s2.name, 'elif')
         self.assertEqual(s3.name, 'while')
 
-    def test_else_try_statements(self):
+    def test_else_statements(self):
         tree = parse_string(jl(
-            '-try \t  : %tag',
+            '-else \t  : %tag',
             '-else:',
             '  sup!',
         ))
@@ -102,9 +102,9 @@ class TestCode(TestCase):
         self.assert_(isinstance(s2, structure.CompoundStatement))
         self.assert_(isinstance(t1, structure.Tag))
         self.assert_(isinstance(t2, structure.Text))
-        self.assertEqual(s1.content, 'try:')
+        self.assertEqual(s1.content, 'else:')
         self.assertEqual(s2.content, 'else:')
-        self.assertEqual(s1.name, 'try')
+        self.assertEqual(s1.name, 'else')
         self.assertEqual(s2.name, 'else')
 
     def test_for_statement(self):

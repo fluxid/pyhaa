@@ -217,3 +217,26 @@ class TestCodegenHtml(TestCase):
                 str(i) + '<a><b lol="lol"><c></c></b></a>',
             )
 
+    def test_exception_encapsulation1(self):
+        tree = parse_string(jl(
+            '-a = iter(range(3))',
+            '-while True:',
+            '  =str(next(a))',
+        ))
+        code = codegen_template(tree)
+        template = compile_template(code)
+        self.assertRaises(StopIteration, html_render_to_string, template, args=[None])
+
+    def test_exception_encapsulation2(self):
+        tree = parse_string(jl(
+            '-raise ValueError("hello")',
+        ))
+        code = codegen_template(tree)
+        template = compile_template(code)
+        try:
+            html_render_to_string(template, args=[None])
+        except ValueError as exc:
+            self.assertSequenceEqual(exc.args, ('hello',))
+        else:
+            self.fail('No proper exception raised')
+

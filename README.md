@@ -50,9 +50,7 @@ Things I left behind for later, not those "yet to be touched".
 
 1. Refactor python-code matchers - rethink how to handle tokenizer readahead
 1. Better unit-test error handling
-1. Reorganize and clean up code in parser, lexer and think of better names for code-related tokens
-1. Handle errors raised in exec (while compiling template) more correctly (StopIteration
-   raised in the template code may cause strange behavior)
+1. Reorganize and clean up code in parser a bit more
 1. Find better way for inserting whitespaces (`!sp` syntax is too a bit ugly)
 1. Make setting tag attributes from variable easier (currently only dict-comprehension is possible)
 
