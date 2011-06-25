@@ -204,13 +204,9 @@ class CodeGen:
 
     def handle_open_simple_statement(self, node):
         if node.name == 'return':
-            log.debug('CLOSING FUNC')
             self.autoclose_close_func()
-            log.debug('CLOSED FUNC')
         elif node.name in ('break', 'continue'):
-            log.debug('CLOSING LOOP')
             self.autoclose_close_loop()
-            log.debug('CLOSED LOOP')
         self.write_io(
             node.content,
         )
@@ -221,15 +217,11 @@ class CodeGen:
         self.write_io(
             node.content,
         )
-        # TODO: support def (when we start to understand it as CompoundStatement)
         if node.name in ('for', 'while'):
-            log.debug('OPENING LOOP')
             self.autoclose_open_loop()
 
     def handle_close_compound_statement(self, node):
-        # TODO: support def (when we start to understand it as CompoundStatement)
         if node.name in ('for', 'while'):
-            log.debug('OPENING LOOP')
             self.autoclose_pop_loop()
 
     # Autoclosing
