@@ -123,9 +123,16 @@ class CodeGen:
             *self.imports
         )
 
-    def open_template_function(self, name):
+    def open_template_function(self, name, attributes=None):
+        attributes = attributes.lstrip() if attributes else ''
+        if attributes and not attributes.startswith(','):
+            attributes = ', ' + attributes
+
         self.write_io(
-            'def {}(self, context):'.format(name),
+            'def {}(self{}):'.format(
+                name,
+                attributes,
+            ),
         )
         self.indent()
         self.write_io(
@@ -171,7 +178,7 @@ class CodeGen:
                 code_level = 1
 
             if code_level == 1 and not isinstance(node, structure.ClassLevel):
-                self.open_template_function('body')
+                self.open_template_function('__call__', '*arguments, **keywords')
                 code_level = 2
 
             self.write_root_node(node)

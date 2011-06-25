@@ -65,7 +65,9 @@ def html_render_to_iterator(template, function_name=None, args=None, kwargs=None
         template = template()
     args = args or list()
     kwargs = kwargs or dict()
-    function = getattr(template, function_name or 'body')
+    function = template
+    if function_name:
+        function = getattr(template, function_name or 'body')
     iterator = function(*args, **kwargs)
     return iterator
 

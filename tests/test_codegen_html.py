@@ -46,7 +46,7 @@ class TestCodegenHtml(TestCase):
         code = codegen_template(tree, template_name = 'basic_template')
         template = compile_template(code)
         self.assertEqual(template.__name__, 'BasicTemplate')
-        rendered = html_render_to_string(template, args=[None])
+        rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
             '<p><a>Text</a></p><input checked="checked" /><div></div>',
@@ -60,11 +60,11 @@ class TestCodegenHtml(TestCase):
 
     def test_dynamic_tags(self):
         tree = parse_string(jl(
-            '%p.a.b{"class": context[0], "_tag_name": context[1]}',
+            '%p.a.b{"class": arguments[0], "_tag_name": arguments[1]}',
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[('c', 'div')])
+        rendered = html_render_to_string(template, args=('c', 'div'))
         self.assertEqual(
             rendered,
             '<div class="c"></div>',
@@ -79,7 +79,7 @@ class TestCodegenHtml(TestCase):
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[None])
+        rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
             '&amp; & &amp; &amp;',
@@ -91,7 +91,7 @@ class TestCodegenHtml(TestCase):
         ))
         code = codegen_template(tree, encoding='iso-8859-2')
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[None])
+        rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
             'Zażółć gęślą jaźń',
@@ -99,12 +99,12 @@ class TestCodegenHtml(TestCase):
 
     def test_expressions(self):
         tree = parse_string(jl(
-            '=context[0]',
-            '?=context[1]',
+            '=arguments[0]',
+            '?=arguments[1]',
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[('&', '&amp;')])
+        rendered = html_render_to_string(template, args=('&', '&amp;'))
         self.assertEqual(
             rendered,
             '&amp;&amp;',
@@ -112,7 +112,7 @@ class TestCodegenHtml(TestCase):
 
     def test_while_if(self):
         tree = parse_string(jl(
-            '-my_iter = iter(context)',
+            '-my_iter = iter(arguments)',
             '%ul',
             '  -while True:',
             '    -value = next(my_iter, None)',
@@ -122,7 +122,7 @@ class TestCodegenHtml(TestCase):
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[['1', '2', '3']])
+        rendered = html_render_to_string(template, args=('1', '2', '3'))
         self.assertEqual(
             rendered,
             '<ul><li>1</li><li>2</li><li>3</li></ul>',
@@ -131,12 +131,12 @@ class TestCodegenHtml(TestCase):
     def test_for(self):
         tree = parse_string(jl(
             '%ul',
-            '  -for value in context:',
+            '  -for value in arguments:',
             '    %li =value',
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[['1', '2', '3']])
+        rendered = html_render_to_string(template, args=('1', '2', '3'))
         self.assertEqual(
             rendered,
             '<ul><li>1</li><li>2</li><li>3</li></ul>',
@@ -144,11 +144,11 @@ class TestCodegenHtml(TestCase):
 
     def test_for_inline(self):
         tree = parse_string(jl(
-            '%ul -for value in context: %li =value',
+            '%ul -for value in arguments: %li =value',
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[['1', '2', '3']])
+        rendered = html_render_to_string(template, args=('1', '2', '3'))
         self.assertEqual(
             rendered,
             '<ul><li>1</li><li>2</li><li>3</li></ul>',
@@ -174,7 +174,7 @@ class TestCodegenHtml(TestCase):
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        rendered = html_render_to_string(template, args=[None])
+        rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
             '<a><b></b>'
@@ -186,7 +186,8 @@ class TestCodegenHtml(TestCase):
 
     def test_autoclose2(self):
         tree = parse_string(jl(
-            '-cont=True',
+            '-cont = True',
+            '-context, = arguments',
             '=str(context)',
             '%a',
             '  -while cont:',
@@ -211,7 +212,7 @@ class TestCodegenHtml(TestCase):
         code = codegen_template(tree)
         template = compile_template(code)
         for i in range(13):
-            rendered = html_render_to_string(template, args=[i])
+            rendered = html_render_to_string(template, args=(i,))
             self.assertEqual(
                 rendered,
                 str(i) + '<a><b lol="lol"><c></c></b></a>',
@@ -225,7 +226,7 @@ class TestCodegenHtml(TestCase):
         ))
         code = codegen_template(tree)
         template = compile_template(code)
-        self.assertRaises(StopIteration, html_render_to_string, template, args=[None])
+        self.assertRaises(StopIteration, html_render_to_string, template)
 
     def test_exception_encapsulation2(self):
         tree = parse_string(jl(
@@ -234,7 +235,7 @@ class TestCodegenHtml(TestCase):
         code = codegen_template(tree)
         template = compile_template(code)
         try:
-            html_render_to_string(template, args=[None])
+            html_render_to_string(template)
         except ValueError as exc:
             self.assertSequenceEqual(exc.args, ('hello',))
         else:
