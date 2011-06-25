@@ -36,6 +36,18 @@ from ..utils.encode import entity_decode
 #log = logging.getLogger(__name__)
 
 
+BODY_STARTING = (
+    'escape', # \
+    'text', # foo bar
+    'html_raw_toggle', # ?
+    'constant', # !
+    'tag_name_start', # %
+    'tag_class_start', # .
+    'tag_id_start', # #
+    'code_statement_start', # -
+    'code_expression_start', # =
+)
+
 class PyhaaParser(Parser):
     def __init__(self):
         super().__init__(pyhaa_lexer, True)
@@ -52,11 +64,19 @@ class PyhaaParser(Parser):
         # TODO Merge two above variables into below code
         self.continue_temporary = set()
         self.temporary_info = dict()
+        self.body_started = False
 
         self.constants = {
             'sp': ' ',
             'html5': ('<!DOCTYPE html>', False),
         }
+
+    def test_body_start(self):
+        '''
+        This function gets called when we matched a token which may start
+        template body.
+        After we start body, we cannot insert head statements
+        '''
 
     # Below functions are used to hold temporary state
 
@@ -78,6 +98,10 @@ class PyhaaParser(Parser):
 
     def token_match(self, token, match):
         super().token_match(token, match)
+
+        if not self.body_started and self.indent == 0 and token in BODY_STARTING:
+            self.body_started = True
+
         func = getattr(self, 'handle_' + token, None)
         if func:
             func(match)
