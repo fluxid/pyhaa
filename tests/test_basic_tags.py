@@ -34,7 +34,7 @@ class TestBasicTags(TestCase):
     def test_one_tag(self):
         tree = parse_string(jl(
             '%',
-        ))
+        )).tree
         # All tags are closed
         self.assertIs(tree.current, tree)
         # Root has one child
@@ -53,7 +53,7 @@ class TestBasicTags(TestCase):
         tree = parse_string(jl(
             '%',
             '%',
-        ))
+        )).tree
         # All tags are closed
         self.assertIs(tree.current, tree)
         # Two children, cool!
@@ -73,7 +73,7 @@ class TestBasicTags(TestCase):
         tree = parse_string(jl(
             '%',
             '\t%',
-        ))
+        )).tree
         # All tags are closed
         self.assertIs(tree.current, tree)
         # Root is parent of one child
@@ -97,7 +97,7 @@ class TestBasicTags(TestCase):
             '%',
             '\t%',
             '%',
-        ))
+        )).tree
         # Again, all tags are closed
         self.assertIs(tree.current, tree)
         # Root is parent of two children
@@ -120,7 +120,7 @@ class TestBasicTags(TestCase):
         tree = parse_string(jl(
             '% %',
             '%',
-        ))
+        )).tree
         # Again, all tags are closed
         self.assertIs(tree.current, tree)
         # Root is parent of two children
@@ -144,7 +144,7 @@ class TestBasicTags(TestCase):
             '%',
             '  %',
             '    %',
-        ))
+        )).tree
         # Of course, all tags are closed
         self.assertIs(tree.current, tree)
         # Let's get straight to children
@@ -166,7 +166,7 @@ class TestBasicTags(TestCase):
             '  %', # tag3
             '  %', # tag4
             '%', # tag5
-        ))
+        )).tree
         # Let's be sure
         self.assertIs(tree.current, tree)
         # Root is parent of two children

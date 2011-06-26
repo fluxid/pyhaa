@@ -35,7 +35,7 @@ class TestText(TestCase):
     def test_text(self):
         tree = parse_string(jl(
             'spam and eggs',
-        ))
+        )).tree
         text1 = tree.children[0]
         self.assertTrue(isinstance(text1, Text))
         self.assertEqual(text1.content, 'spam and eggs')
@@ -43,7 +43,7 @@ class TestText(TestCase):
     def test_escape(self):
         tree = parse_string(jl(
             '\\%i am no tag!',
-        ))
+        )).tree
         text1 = tree.children[0]
         self.assertTrue(isinstance(text1, Text))
         self.assertEqual(text1.content, '%i am no tag!')
@@ -51,7 +51,7 @@ class TestText(TestCase):
     def test_inline_text(self):
         tree = parse_string(jl(
             '%some-tag.class#id %child text',
-        ))
+        )).tree
         tmp = tree
         tmp, = tmp.children # unpack tree children
         tmp, = tmp.children # unpack first child children
@@ -63,7 +63,7 @@ class TestText(TestCase):
     def test_inline_escape(self):
         tree = parse_string(jl(
             '%some-tag.class#id %child \\%text',
-        ))
+        )).tree
         tmp = tree
         tmp, = tmp.children # unpack tree children
         tmp, = tmp.children # unpack first child children
@@ -77,7 +77,7 @@ class TestText(TestCase):
             '%some-tag.class#id',
             '  %child',
             '    text',
-        ))
+        )).tree
         tmp = tree
         tmp, = tmp.children # unpack tree children
         tmp, = tmp.children # unpack first child children
@@ -91,7 +91,7 @@ class TestText(TestCase):
             '%some-tag.class#id',
             '  %child',
             '    \\%text',
-        ))
+        )).tree
         tmp = tree
         tmp, = tmp.children # unpack tree children
         tmp, = tmp.children # unpack first child children
@@ -105,7 +105,7 @@ class TestText(TestCase):
             'foo',
             '\%',
             'bar',
-        ))
+        )).tree
         text1, = tree
         self.assertTrue(isinstance(text1, Text))
         self.assertEqual(text1.content, 'foo % bar')
@@ -114,7 +114,7 @@ class TestText(TestCase):
         tree = parse_string(jl(
             '\  \t  foo   \t  ',
             'bar  \t  ',
-        ))
+        )).tree
         text1, = tree
         self.assertTrue(isinstance(text1, Text))
         self.assertEqual(text1.content, 'foo bar')
@@ -125,7 +125,7 @@ class TestText(TestCase):
             '?&amp;',
             '?&amp;',
             '&amp;',
-        ))
+        )).tree
         text1, text2, text3 = tree
         self.assertEqual(text1.escape, True)
         self.assertEqual(text2.escape, False)
@@ -138,7 +138,7 @@ class TestText(TestCase):
         tree = parse_string(jl(
             '!html5',
             '!sp',
-        ))
+        )).tree
         text1, text2 = tree
         self.assertEqual(text1.escape, False)
         self.assertEqual(text2.escape, True)
@@ -160,7 +160,7 @@ class TestText(TestCase):
             '; a ',
             ';',
             'test2',
-        ))
+        )).tree
         t1, t2, t3 = tree
         t4, = t2
         self.assertTrue(isinstance(t1, Text))

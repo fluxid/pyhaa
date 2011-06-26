@@ -40,7 +40,7 @@ def parse_readline(readline, parser_class=PyhaaParser):
     parser = parser_class()
     parser.parse_readline(readline)
     parser.finish()
-    return parser.tree
+    return parser.structure
 
 def parse_io(fileobj):
     return parse_readline(fileobj.readline)
@@ -48,9 +48,9 @@ def parse_io(fileobj):
 def parse_string(string):
     return parse_io(io.StringIO(string))
 
-def codegen_template(tree, codegen_class = HTMLCodeGen, **kwargs):
+def codegen_template(structure, codegen_class = HTMLCodeGen, **kwargs):
     bio = io.BytesIO()
-    cg = codegen_class(tree, bio, **kwargs)
+    cg = codegen_class(structure, bio, **kwargs)
     cg.write()
     return bio.getvalue()
 

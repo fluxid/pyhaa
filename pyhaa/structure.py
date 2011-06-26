@@ -119,18 +119,13 @@ class PyhaaStatement:
         super().__init__(**kwargs)
 
 
-class ModuleLevel:
+class PyhaaStructure:
     '''
-    Allows node to be on a module level (i.e. module-level code like import)
+    Template document structure
     '''
-    pass
-
-
-class ClassLevel:
-    '''
-    Allows node to be on a class module (i.e. helper function)
-    '''
-    pass
+    def __init__(self):
+        self.tree = PyhaaTree()
+        self.inheritance = []
 
 
 # Node types

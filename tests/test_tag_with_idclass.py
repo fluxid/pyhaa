@@ -35,21 +35,21 @@ class TestTagsWithIdClass(TestCase):
     def test_only_class(self):
         tree = parse_string(jl(
             '.foo',
-        ))
+        )).tree
         tag, = tree.children
         self.assertSetEqual(tag.classes, {'foo'})
 
     def test_only_id(self):
         tree = parse_string(jl(
             '#bar',
-        ))
+        )).tree
         tag, = tree.children
         self.assertEqual(tag.id_, 'bar')
 
     def test_only_name(self):
         tree = parse_string(jl(
             '%div',
-        ))
+        )).tree
         tag, = tree.children
         self.assertEqual(tag.name, 'div')
         self.assertSetEqual(tag.classes, set())
@@ -58,7 +58,7 @@ class TestTagsWithIdClass(TestCase):
     def test_all_at_once(self):
         tree = parse_string(jl(
             '%div#head.rainbow.unicorns.autoclear',
-        ))
+        )).tree
         tag, = tree.children
         self.assertEqual(tag.name, 'div')
         self.assertSetEqual(tag.classes, {'rainbow', 'unicorns', 'autoclear'})
@@ -69,7 +69,7 @@ class TestTagsWithIdClass(TestCase):
             '%ul',
             '  %li spam',
             '  %li eggs',
-        ))
+        )).tree
         tag_ul, = tree.children
         self.assertEqual(tag_ul.name, 'ul')
         tag_li1, tag_li2 = tag_ul.children
@@ -87,7 +87,7 @@ class TestTagsWithIdClass(TestCase):
             '  %li#first_one',
             '    %a.bling my pets',
             '  %li.pink %a.bounce my sweet photos',
-        ))
+        )).tree
         tag_ul, = tree.children
         self.assertEqual(tag_ul.name, 'ul')
         self.assertEqual(tag_ul.id_, 'left_menu')
@@ -112,7 +112,7 @@ class TestTagsWithIdClass(TestCase):
         tree = parse_string(jl(
             '%',
             '  .foo',
-        ))
+        )).tree
         tag1, = tree.children
         tag2, = tag1.children
         self.assertSetEqual(tag1.classes, set())
@@ -122,7 +122,7 @@ class TestTagsWithIdClass(TestCase):
         tree = parse_string(jl(
             '%',
             '  #foo',
-        ))
+        )).tree
         tag1, = tree.children
         tag2, = tag1.children
         self.assertIs(tag1.id_, None)
@@ -131,7 +131,7 @@ class TestTagsWithIdClass(TestCase):
     def test_child_class_inline(self):
         tree = parse_string(jl(
             '% .foo',
-        ))
+        )).tree
         tag1, = tree.children
         tag2, = tag1.children
         self.assertSetEqual(tag1.classes, set())
@@ -140,7 +140,7 @@ class TestTagsWithIdClass(TestCase):
     def test_child_id_inline(self):
         tree = parse_string(jl(
             '% #foo',
-        ))
+        )).tree
         tag1, = tree.children
         tag2, = tag1.children
         self.assertIs(tag1.id_, None)

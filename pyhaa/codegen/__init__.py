@@ -118,7 +118,7 @@ class CodeGen:
             '',
         )
 
-    def write_imports(self):
+    def write_base_imports(self):
         self.write_io(
             *self.imports
         )
@@ -145,7 +145,7 @@ class CodeGen:
         self.dedent(2)
 
     def write_root_node(self, node):
-        # In this case as "root node" we mean node which has tree root as parent
+        # In this case as "root node" we mean node which is the topmost parent
         iter_stack = list()
         node_stack = list()
         current_iter = utils.one_iter(node)
@@ -171,21 +171,15 @@ class CodeGen:
                 self.node_close(node)
 
     def write_structure(self):
-        code_level = 0
-        for node in self.structure:
-            if code_level == 0 and not isinstance(node, structure.ModuleLevel):
-                self.write_class()
-                code_level = 1
-
-            if code_level == 1 and not isinstance(node, structure.ClassLevel):
-                self.open_template_function('__call__', '*arguments, **keywords')
-                code_level = 2
-
-            self.write_root_node(node)
+        # TODO Write template "globals" here
+        self.write_class()
+        # TODO Write inheritance stuff here
+        # TODO Write partial stuff here
+        self.write_root_node(self.structure.tree)
 
     def write(self):
         self.write_file_header()
-        self.write_imports()
+        self.write_base_imports()
         self.write_structure()
 
     def node_open(self, node):
@@ -208,6 +202,12 @@ class CodeGen:
             function(node)
         else:
             log.warning("Couldn't find function %s for node %r.", function_name, node)
+
+    def handle_open_pyhaa_tree(self, node):
+        self.open_template_function('__call__', '*arguments, **keywords')
+
+    def handle_close_pyhaa_tree(self, node):
+        self.close_template_function()
 
     def handle_open_simple_statement(self, node):
         if node.name == 'return':

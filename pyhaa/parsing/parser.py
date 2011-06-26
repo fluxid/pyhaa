@@ -54,7 +54,7 @@ class PyhaaParser(Parser):
         self.indent = 0
         self.tab_width = 0
         self.length = 0
-        self.tree = structure.PyhaaTree()
+        self.structure = structure.PyhaaStructure()
 
         self.current_opened = 0
         self.opened_stack = list()
@@ -209,7 +209,7 @@ class PyhaaParser(Parser):
 
     def begin_tag(self):
         self.creating_tag = True
-        self.tree.append(structure.Tag())
+        self.structure.tree.append(structure.Tag())
         self.current_opened += 1
 
     def end_tag(self):
@@ -234,14 +234,14 @@ class PyhaaParser(Parser):
             # We escape text, but decode entities/unsescape first,
             # we will escape it again at codegen level
             text = entity_decode(text)
-        if isinstance(self.tree.current, structure.PyhaaParent):
-            children = self.tree.current.children
+        if isinstance(self.structure.tree.current, structure.PyhaaParent):
+            children = self.structure.tree.current.children
             if children:
                 last_one = children[-1]
                 if isinstance(last_one, structure.Text) and last_one.escape == escape:
                     last_one.content = last_one.content.rstrip() + ' ' + text.lstrip()
                     return
-        self.tree.append(structure.Text(content = text, escape = escape))
+        self.structure.tree.append(structure.Text(content = text, escape = escape))
         # PyhaaSimpleContent is not openable, but we must "close" it explicitly when
         # reindenting
         self.current_opened += 1
@@ -264,44 +264,44 @@ class PyhaaParser(Parser):
         self.begin_tag()
 
     def handle_tag_name(self, match):
-        self.tree.current.name = entity_decode(match.group(0))
+        self.structure.tree.current.name = entity_decode(match.group(0))
 
     def handle_tag_class_start(self, match):
         if not self.creating_tag:
             self.begin_tag()
 
     def handle_tag_class_name(self, match):
-        self.tree.current.classes.add(entity_decode(match.group(0)))
+        self.structure.tree.current.classes.add(entity_decode(match.group(0)))
 
     def handle_tag_id_start(self, match):
         if not self.creating_tag:
             self.begin_tag()
 
     def handle_tag_id_name(self, match):
-        if self.tree.current.id_ is not None:
+        if self.structure.tree.current.id_ is not None:
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.ID_ALREADY_SET,
                 self,
             )
-        self.tree.current.id_ = entity_decode(match.group(0))
+        self.structure.tree.current.id_ = entity_decode(match.group(0))
 
 
     # TAG ATTRIBUTES stuff
     def handle_tas_start(self, match):
         # Ensures that the last attribute-set is a dict so we can set attributes later
-        self.tree.current.append_attributes(dict())
+        self.structure.tree.current.append_attributes(dict())
 
     def handle_tas_name(self, match):
         name = entity_decode(match.group('value'))
-        self.tree.current.attributes_set[-1][name] = True
+        self.structure.tree.current.attributes_set[-1][name] = True
         self.last_tas_name = name
 
     def handle_tas_value(self, match):
-        self.tree.current.attributes_set[-1][self.last_tas_name] = entity_decode(match.group('value'))
+        self.structure.tree.current.attributes_set[-1][self.last_tas_name] = entity_decode(match.group('value'))
         self.last_tas_name = None
 
     def handle_tap_content(self, match):
-        self.tree.current.append_attributes(match)
+        self.structure.tree.current.append_attributes(match)
 
 
     # PYTHON CODE stuff
@@ -352,19 +352,19 @@ class PyhaaParser(Parser):
             )
         else:
             complete = statement + ':'
-        self.tree.append(structure.CompoundStatement(name = statement, content = complete))
+        self.structure.tree.append(structure.CompoundStatement(name = statement, content = complete))
         self.set_info('expected_indent', True)
         self.current_opened += 1
 
     def handle_code_statement_simple(self, match):
-        self.tree.append(structure.SimpleStatement(content = match))
+        self.structure.tree.append(structure.SimpleStatement(content = match))
         self.current_opened += 1
 
     def handle_code_expression_start(self, match):
         self.continue_info('escape_next')
 
     def handle_code_expression(self, match):
-        self.tree.append(structure.Expression(content = match, escape = self.escape_next))
+        self.structure.tree.append(structure.Expression(content = match, escape = self.escape_next))
         # PyhaaSimpleContent is not openable, but we must to "close" it explicitly when
         # reindenting
         self.current_opened += 1
@@ -378,7 +378,7 @@ class PyhaaParser(Parser):
         to_close = self.current_opened
         for i in range(times):
             to_close += self.opened_stack.pop()
-        self.tree.close(to_close)
+        self.structure.tree.close(to_close)
         self.current_opened = 0
         self.indent -= times
 
@@ -386,7 +386,7 @@ class PyhaaParser(Parser):
         '''
         Indented line
         '''
-        if not isinstance(self.tree.current, structure.PyhaaParentNode):
+        if not isinstance(self.structure.tree.current, structure.PyhaaParentNode):
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.UNEXPECTED_INDENT,
                 self,
@@ -399,7 +399,7 @@ class PyhaaParser(Parser):
         '''
         Continuing at the same indent level
         '''
-        self.tree.close(self.current_opened)
+        self.structure.tree.close(self.current_opened)
         self.current_opened = 0
 
     def finish(self):

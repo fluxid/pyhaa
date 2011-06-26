@@ -53,7 +53,7 @@ class TestTagAttributes(TestCase):
             '%',
             '%(){}()',
             '%( \t     ){  \t  }',
-        ))
+        )).tree
         tag1, tag2, tag3 = tree.children
         self.assertAttributesEqual(tag1, {})
         self.assertAttributesEqual(tag2, {})
@@ -64,7 +64,7 @@ class TestTagAttributes(TestCase):
         tree = parse_string(jl(
             '%(foo \t bar)',
             '%( \t baz\t \t)',
-        ))
+        )).tree
         tag1, tag2 = tree.children
         self.assertAttributesEqual(tag1, {
             'foo': True,
@@ -79,7 +79,7 @@ class TestTagAttributes(TestCase):
         # Note that there is %(...)(...)
         tree = parse_string(jl(
             '%( foo_bar-baz \t = \'lol\' \t)( spam = eggs i_feel-great- \t lmao=" rofl\t\'")',
-        ))
+        )).tree
         tag, = tree.children
         self.assertAttributesEqual(tag, {
             'foo_bar-baz': 'lol',
@@ -94,7 +94,7 @@ class TestTagAttributes(TestCase):
             '   spam = eggs ',
             'herp="derp"',
             ')',
-        ))
+        )).tree
         tag, = tree.children
         self.assertAttributesEqual(tag, {
             'spam': 'eggs',
@@ -105,7 +105,7 @@ class TestTagAttributes(TestCase):
         # Even dirtier
         tree = parse_string(jl(
             '%{"sup":"nah"}{"at"+"tribute": ("value"*2).upper()}',
-        ))
+        )).tree
         tag, = tree.children
         self.assertAttributesEqual(tag, {
             'attribute': 'VALUEVALUE',
@@ -122,7 +122,7 @@ class TestTagAttributes(TestCase):
             '      "bute": (',
             '"value"*2).upper()',
             '   }',
-        ))
+        )).tree
         tag1, = tree.children
         tag2, = tag1.children
         self.assertAttributesEqual(tag1, {
@@ -143,13 +143,13 @@ class TestTagAttributes(TestCase):
             '%{ \t }',
             '%( \t )',
             '%a',
-        ))
+        )).tree
         self.assertEqual(len(tree.children), 9)
 
     def test_entity_decode(self):
         tree = parse_string(jl(
             '%&Aacute;.&Aacute;#&Aacute;(&Aacute;="&quot;&apos;&Aacute;")',
-        ))
+        )).tree
         tag1, = tree
         self.assertEqual(tag1.name, '\u00c1')
         self.assertEqual(tag1.id_, '\u00c1')

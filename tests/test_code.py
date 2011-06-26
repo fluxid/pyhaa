@@ -37,7 +37,7 @@ class TestCode(TestCase):
             '=a()',
             '= "b"',
             '%placeholder2',
-        ))
+        )).tree
         tag1, code1, code2, tag2 = tree
         self.assert_(isinstance(tag1, structure.Tag))
         self.assert_(isinstance(code1, structure.Expression))
@@ -58,7 +58,7 @@ class TestCode(TestCase):
             ' "a": "b"',
             '}, 2',
             '   )  ',
-        ))
+        )).tree
         code1, code2, code3 = tree
         self.assert_(isinstance(code1, structure.Expression))
         self.assert_(isinstance(code2, structure.Expression))
@@ -71,7 +71,7 @@ class TestCode(TestCase):
             '  %tag',
             '-while \tFalse:',
             '  Will not happen!',
-        ))
+        )).tree
         s1, s2, s3 = tree
         t1, = s1
         t2, = s2
@@ -94,7 +94,7 @@ class TestCode(TestCase):
             '-else \t  : %tag',
             '-else:',
             '  sup!',
-        ))
+        )).tree
         s1, s2 = tree
         t1, = s1
         t2, = s2
@@ -112,7 +112,7 @@ class TestCode(TestCase):
             '-for a in range(10): %tag',
             '-for(a)in(range(10)) :',
             '  sup!',
-        ))
+        )).tree
         s1, s2 = tree
         t1, = s1
         t2, = s2
@@ -130,7 +130,7 @@ class TestCode(TestCase):
             '-return(1)',
             '-break',
             '-assert False \t ',
-        ))
+        )).tree
         s1, s2, s3 = tree
         self.assert_(isinstance(s1, structure.SimpleStatement))
         self.assert_(isinstance(s2, structure.SimpleStatement))

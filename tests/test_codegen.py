@@ -43,7 +43,7 @@ class TestingCodeGen(codegen.CodeGen):
 
 class TestCodegen(TestCase):
     def test_basic_codegen(self):
-        tree = parse_string(jl(
+        structure = parse_string(jl(
             '%a',
             '  %b',
             '%c',
@@ -54,12 +54,13 @@ class TestCodegen(TestCase):
             '?=raw_expression',
         ))
         bio = io.BytesIO()
-        cg = TestingCodeGen(tree, bio)
+        cg = TestingCodeGen(structure, bio)
         cg.write()
         bio.getvalue().decode('utf-8')
         self.assertSequenceEqual(
             cg.called_functions,
             [
+                'handle_open_pyhaa_tree',
                 'handle_open_tag',
                 'handle_open_tag',
                 'handle_close_tag',
@@ -76,6 +77,7 @@ class TestCodegen(TestCase):
                 'handle_close_text',
                 'handle_open_expression',
                 'handle_close_expression',
+                'handle_close_pyhaa_tree',
             ],
         )
 
