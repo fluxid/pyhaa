@@ -23,6 +23,7 @@ Testing template loading from files
 # <http://www.gnu.org/licenses/>.
 
 from unittest import TestCase
+import os
 
 from pyhaa import (
     html_render_to_string,
@@ -66,4 +67,29 @@ class TestLoaders(TestCase):
         # Now get something using absolute path
         rendered = self._load_and_render(environment, '../../pages/page.pha', 'common/parts/')
         self.assertEqual(rendered, 'I am the page!')
+
+    def test_reload(self):
+        reloaded = False
+
+        class MyLoader(FileSystemLoader):
+            def get_bytecode(self, *args, **kwargs):
+                nonlocal reloaded
+                reloaded = True
+                return super().get_bytecode(*args, **kwargs)
+
+        loader = MyLoader(paths='./tests/files/', input_encoding = 'utf-8')
+        environment = PyhaaEnvironment(loader = loader)
+
+        self._load_and_render(environment, 'basic.pha')
+        reloaded = False
+        self._load_and_render(environment, 'basic.pha')
+        self.assertFalse(reloaded)
+        os.utime('./tests/files/basic.pha', None)
+        self._load_and_render(environment, 'basic.pha')
+        self.assertTrue(reloaded)
+        reloaded = False
+        environment.auto_reload = False
+        os.utime('./tests/files/basic.pha', None)
+        self._load_and_render(environment, 'basic.pha')
+        self.assertFalse(reloaded)
 

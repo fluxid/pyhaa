@@ -31,12 +31,14 @@ class PyhaaEnvironment:
         loader=None,
         parser_class=None,
         codegen_class=None,
-        output_encoding='utf-8'
+        output_encoding='utf-8',
+        auto_reload = True,
     ):
         self.loader = loader
         self.parser_class = parser_class
         self.codegen_class = codegen_class
         self.output_encoding = output_encoding
+        self.auto_reload = auto_reload
 
     def get_parser_class(self):
         if self.parser_class:

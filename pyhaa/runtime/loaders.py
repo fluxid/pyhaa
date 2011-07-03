@@ -54,7 +54,7 @@ class BaseLoader:
         expired = None
         if template:
             template, token = template
-            expired = self.is_expired(token)
+            expired = self._is_expired(path, environment, token)
             if expired:
                 self.template_cache.remove(path)
             else:
@@ -66,7 +66,7 @@ class BaseLoader:
             bytecode = self.bytecode_cache.get(path)
             if bytecode:
                 bytecode, token = bytecode
-                expired = self.is_expired(token)
+                expired = self._is_expired(path, environment, token)
                 if expired:
                     self.bytecode_cache.remove(path)
                     bytecode = None
@@ -85,23 +85,23 @@ class BaseLoader:
         return template
 
     def get_bytecode(self, path, environment):
-        result, filename, is_expired = self.get_python_code(path, environment)
+        result, filename, token = self.get_python_code(path, environment)
         bytecode = compile(result, filename, 'exec')
-        return bytecode, is_expired
+        return bytecode, token
 
     def get_python_code(self, path, environment):
-        result, filename, is_expired = self.get_source_code(path, environment)
+        result, filename, token = self.get_source_code(path, environment)
         structure = environment.parse_any(result)
         code = environment.codegen_structure(structure)
-        return code, filename, is_expired
+        return code, filename, token
     
     def get_source_code(self, path, environment):
         raise NotImplementedError
 
     def _is_expired(self, path, environment, token):
-        #if not environment.auto_reload():
-            #return False
-        return self.is_expired
+        if not environment.auto_reload:
+            return False
+        return self.is_expired(path, environment, token)
 
     def is_expired(self, path, environment, token):
         return False
