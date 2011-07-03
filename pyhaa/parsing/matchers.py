@@ -63,7 +63,7 @@ class ConstantLength(Matcher):
 
 class PythonStatementMatcher(Matcher):
     match_bracket = None
-    ast_check = True
+    should_check_ast = True
     break_at_colon = False
     break_at_keyword = []
 
@@ -131,9 +131,9 @@ class PythonStatementMatcher(Matcher):
                     break
 
         except tokenize.TokenError:
-            if self.ast_check:
-                # Ignore. Let ast parse it again, actual error may be different
-                pass
+            if not self.should_check_ast:
+                raise
+            # Ignore. Let ast parse it again, actual error may be different
 
         lines = lines[:srow]
         lines[-1] = lines[-1][:ecol].rstrip()
@@ -145,7 +145,7 @@ class PythonStatementMatcher(Matcher):
 
         jlines = ''.join(lines)
 
-        if self.check_ast:
+        if self.should_check_ast:
             jlines2 = (jlines+'\n').encode('utf8')
             with clear_exception_context(PyhaaSyntaxError):
                 try:
@@ -207,10 +207,6 @@ class PythonExpressionListMatcher(PythonStatementMatcher):
                 SYNTAX_INFO.INVALID_PYTHON_EXPRESSION,
                 parser,
             )
-
-
-class PythonExpressionNoColonMatcher(PythonExpressionMatcher):
-    break_at_colon = True
 
 
 class PythonTargetMatcher(PythonExpressionMatcher):
