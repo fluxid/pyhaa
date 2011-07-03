@@ -20,30 +20,16 @@
 
 import codecs
 import os.path
-import posixpath
 
+from .cache import TemplateCache
 from ..utils import try_detect_encoding
 
 class BaseLoader:
-    def __init__(self, cache = None, check_time = True):
-        self.cache = cache or {}
-        self.check_time = check_time
+    def __init__(self, template_cache_size = 100, bytecode_cache = None):
+        self.template_cache = TemplateCache(template_cache_size)
+        self.bytecode_cache = bytecode_cache
 
-    def load(self, path, environment, current_path = None):
-        if current_path and not path.startswith('/'):
-            path = posixpath.join(current_path, path)
-
-        path = posixpath.normpath(path)
-
-        if path.startswith('/'):
-            path = path[1:]
-        if path.startswith('..'):
-            # TODO Raise proper exception
-            raise Exception
-
-        # TODO Move all the above to utils
-        # TODO threadlocks
-
+    def load_template(self, path, environment, current_path = None):
         if self.cache:
             cached = True
             if check_time:
@@ -63,8 +49,63 @@ class BaseLoader:
 
         return module
 
-    def get_module(self, path, environment):
+    def get_template_module(self, path, environment):
+        template = self.template_cache.get(path)
+        expired = None
+        if template:
+            template, token = template
+            expired = self.is_expired(token)
+            if expired:
+                self.template_cache.remove(path)
+            else:
+                return template
+
+        bytecode = None
+        read_from_cache = False
+        if not expired and self.bytecode_cache:
+            bytecode = self.bytecode_cache.get(path)
+            if bytecode:
+                bytecode, token = bytecode
+                expired = self.is_expired(token)
+                if expired:
+                    self.bytecode_cache.remove(path)
+                    bytecode = None
+                else:
+                    read_from_cache = True
+
+        if not bytecode:
+            bytecode, token = self.get_bytecode(path, environment)
+
+        template = environment.template_module_from_bytecode(bytecode)
+
+        self.template_cache.store(path, (template, token))
+        if not read_from_cache and self.bytecode_cache:
+            self.bytecode_cache.store(path, bytecode, token) 
+
+        return template
+
+    def get_bytecode(self, path, environment):
+        result, filename, is_expired = self.get_python_code(path, environment)
+        bytecode = compile(result, filename, 'exec')
+        return bytecode, is_expired
+
+    def get_python_code(self, path, environment):
+        result, filename, is_expired = self.get_source_code(path, environment)
+        structure = environment.parse_any(result)
+        code = environment.codegen_structure(structure)
+        return code, filename, is_expired
+    
+    def get_source_code(self, path, environment):
         raise NotImplementedError
+
+    def _is_expired(self, path, environment, token):
+        #if not environment.auto_reload():
+            #return False
+        return self.is_expired
+
+    def is_expired(self, path, environment, token):
+        return False
+
 
 class FileSystemLoader(BaseLoader):
     def __init__(self, paths = None, input_encoding = None, **kwargs):
@@ -79,7 +120,7 @@ class FileSystemLoader(BaseLoader):
         self.paths = paths
         self.input_encoding = input_encoding
 
-    def get_filepath(self, path):
+    def lookup_filename(self, path):
         path = os.path.normpath(path)
         for curpath in self.paths:
             curpath = os.path.join(curpath, path)
@@ -87,24 +128,26 @@ class FileSystemLoader(BaseLoader):
                 return curpath
         return None
 
-    def get_time(self, path, environment):
-        path = self.get_filepath(path)
-        if not path:
-            return None
-        return os.path.getmtime(path)
-
-    def get_module(self, path, environment):
+    def get_source_code(self, path, environment):
         encoding = self.input_encoding
-        our_path = self.get_filepath(path)
+        our_path = self.lookup_filename(path)
         if not our_path:
             # TODO raise proper exception
-            raise Exception('File not found: "{}"'.format(path))
-        with open(our_path, 'br') as fp:
-            if not encoding:
-                encoding = try_detect_encoding(fp) or 'utf-8'
-            cfp = codecs.getreader(encoding)(fp)
+            raise Exception('Template not found: "{}"'.format(path))
+        
+        token = os.path.getmtime(our_path)
 
-            structure = environment.parse_io(cfp)
-            code = environment.codegen_template(structure)
-            return environment.compile_template(code)
+        fp = open(our_path, 'br')
+        if not encoding:
+            encoding = try_detect_encoding(fp) or 'utf-8'
+        cfp = codecs.getreader(encoding)(fp)
+
+        return cfp, our_path, token
+
+    def is_expired(self, path, environment, token):
+        our_path = self.lookup_filename(path)
+        if not our_path:
+            return True
+        token2 = os.path.getmtime(our_path)
+        return token2 > token
 

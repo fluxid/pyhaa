@@ -19,13 +19,20 @@
 # <http://www.gnu.org/licenses/>.
 
 import io
+import posixpath
 
 __all__ = (
     'PyhaaEnvironment',
 )
 
 class PyhaaEnvironment:
-    def __init__(self, loader=None, parser_class=None, codegen_class=None, output_encoding='utf-8'):
+    def __init__(
+        self,
+        loader=None,
+        parser_class=None,
+        codegen_class=None,
+        output_encoding='utf-8'
+    ):
         self.loader = loader
         self.parser_class = parser_class
         self.codegen_class = codegen_class
@@ -46,8 +53,18 @@ class PyhaaEnvironment:
         return HTMLCodeGen
 
     def get_template(self, path, current_path=None):
-        assert self.loader
-        return self.loader.load(path, self, current_path)
+        if current_path and not path.startswith('/'):
+            path = posixpath.join(current_path, path)
+
+        path = posixpath.normpath(path)
+
+        if path.startswith('/'):
+            path = path[1:]
+        if path.startswith('..'):
+            # TODO Raise proper exception
+            raise Exception
+
+        return self.loader.get_template_module(path, self)
 
     def parse_readline(self, readline):
         parser = self.get_parser_class()()
@@ -56,21 +73,36 @@ class PyhaaEnvironment:
         return parser.structure
 
     def parse_io(self, fp):
-        return self.parse_readline(fp.readline)
+        result = self.parse_readline(fp.readline)
+        fp.close()
+        return result
 
     def parse_string(self, string):
         return self.parse_io(io.StringIO(string))
 
-    def codegen_template(self, structure, **kwargs):
+    def parse_any(self, source):
+        if isinstance(source, io.IOBase) or hasattr(source, 'readline'):
+            return self.parse_io(source)
+
+        if isinstance(source, str):
+            return self.parse_string(source)
+
+        if hasattr(source, '__call__'):
+            return self.parse_readline(source)
+
+        # TODO - And do we need it?
+        #if hasattr(source, '__next__'): #iter2readline(source)
+        #if hasattr(source, '__iter__'): #iter2readline(iter(source))
+
+    def codegen_structure(self, structure, **kwargs):
         bio = io.BytesIO()
         kwargs.setdefault('encoding', self.output_encoding)
         cg = self.get_codegen_class()(structure, bio, **kwargs)
         cg.write()
         return bio.getvalue()
 
-    def compile_template(self, code):
+    def template_module_from_bytecode(self, bytecode):
         dict_ = dict()
-        exec(code, dict_, dict_)
-        template = dict_[dict_['template_class_name']]
-        return template
+        exec(bytecode, dict_, dict_)
+        return dict_[dict_['template_class_name']]
 
