@@ -29,26 +29,6 @@ class BaseLoader:
         self.template_cache = TemplateCache(template_cache_size)
         self.bytecode_cache = bytecode_cache
 
-    def load_template(self, path, environment, current_path = None):
-        if self.cache:
-            cached = True
-            if check_time:
-                cache_time = self.cache.get_time(path, environment)
-                loader_time = self.get_time(path, environment)
-                if not cache_time or loader_time and cache_time < loader_time:
-                    cached = False
-
-            if cached:
-                module = self.cache.get_module(path, environment)
-                if module:
-                    return module
-
-        module = self.get_module(path, environment)
-        if self.cache:
-            self.cache.memorize(path, module, environment)
-
-        return module
-
     def get_template_module(self, path, environment):
         template = self.template_cache.get(path)
         expired = None
