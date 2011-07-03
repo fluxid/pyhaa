@@ -18,6 +18,7 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import codecs
 from contextlib import contextmanager
 from functools import wraps
 from itertools import count
@@ -25,6 +26,15 @@ import re
 
 RE_DECAMEL = re.compile('[A-Z]')
 RE_CAMEL = re.compile('^([a-z])|_([a-z])')
+RE_CODING = re.compile('coding[:=]\s*([-\w.]+)')
+
+BOMS = (
+    (codecs.BOM_UTF8, 'utf-8'),
+    (codecs.BOM_UTF16_BE, 'utf-16be'),
+    (codecs.BOM_UTF16_LE, 'utf-16le'),
+    (codecs.BOM_UTF32_BE, 'utf-32be'),
+    (codecs.BOM_UTF32_LE, 'utf-32le'),
+)
 
 class DescEnum:
     __slots__ = ('to_desc', 'to_name', 'to_value')
@@ -154,4 +164,27 @@ def _camel(match):
 
 def camel(string):
     return RE_CAMEL.sub(_camel, string)
+
+def try_detect_encoding(fp):
+    '''
+    Tries to detect file encoding, using BOM or coding-comment in
+    similar way as Python does - with exception that we look only
+    in the first line, since templates don't allow shebangs.
+
+    Assumes current reading position is at the beginning of the file.
+    '''
+    # TODO: if both fails, how about trying chardet?
+    line = fp.readline()
+    for bom, encoding in BOMS:
+        if line.startswith(bom):
+            fp.seek(len(bom))
+            return encoding
+
+    fp.seek(0)
+
+    match = RE_CODING.search(line)
+    if not match:
+        return None
+
+    return match.group(1)
         
