@@ -49,8 +49,8 @@ BODY_STARTING = (
 )
 
 class PyhaaParser(Parser):
-    def __init__(self):
-        super().__init__(pyhaa_lexer, True)
+    def __init__(self, lexer = pyhaa_lexer):
+        super().__init__(lexer, True)
         self.indent = 0
         self.tab_width = 0
         self.length = 0
@@ -222,7 +222,10 @@ class PyhaaParser(Parser):
     def handle_line_end(self, match):
         self.continue_info('expected_indent')
         self.end_tag()
-
+    
+    # HEAD stuff
+    def handle_head_inherit_expression(self, match):
+        self.structure.inherit.append(match)
 
     # SMALL stuff
     def handle_text(self, match):

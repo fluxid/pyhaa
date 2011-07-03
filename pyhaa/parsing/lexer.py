@@ -52,10 +52,6 @@ pyhaa_lexer = dict(
             'line',
         ),
     ),
-    head_statement_start = dict(
-        match = MS('`'),
-        after = 'line_end',
-    ),
     line = dict(
         match = (
             'line_end', # Basically an empty line
@@ -91,6 +87,25 @@ pyhaa_lexer = dict(
     line_end = dict(
         match = MRE('\s*$'),
         after = next_line,
+    ),
+
+    # HEAD statements
+    head_statement_start = dict(
+        match = MS('`'),
+        after = 'head_statement',
+    ),
+    head_statement = dict(
+        match = (
+            'head_inherit'
+        ),
+    ),
+    head_inherit = dict(
+        match = MS('inherit'),
+        after = 'head_inherit_expression',
+    ),
+    head_inherit_expression = dict(
+        match = matchers.PythonExpressionListMatcher(),
+        after = 'line_end',
     ),
 
     # SMALL stuff
