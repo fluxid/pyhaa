@@ -26,14 +26,16 @@ import re
 
 RE_DECAMEL = re.compile('[A-Z]')
 RE_CAMEL = re.compile('^([a-z])|_([a-z])')
-RE_CODING = re.compile('coding[:=]\s*([-\w.]+)')
+RE_CODING = re.compile(b'coding[:=]\s*([-\w.]+)')
 
+# IMPORTANT: utf32 must go first because BOM_UTF32_LE starts with BOM_UTF16_LE!
+# Otherwise we would detect UTF32 as UTF16 with two nullchars at the begining
 BOMS = (
     (codecs.BOM_UTF8, 'utf-8'),
-    (codecs.BOM_UTF16_BE, 'utf-16be'),
-    (codecs.BOM_UTF16_LE, 'utf-16le'),
     (codecs.BOM_UTF32_BE, 'utf-32be'),
     (codecs.BOM_UTF32_LE, 'utf-32le'),
+    (codecs.BOM_UTF16_BE, 'utf-16be'),
+    (codecs.BOM_UTF16_LE, 'utf-16le'),
 )
 
 class DescEnum:
@@ -186,5 +188,5 @@ def try_detect_encoding(fp):
     if not match:
         return None
 
-    return match.group(1)
+    return match.group(1).decode('ascii')
         

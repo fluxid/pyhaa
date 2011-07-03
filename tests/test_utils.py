@@ -22,6 +22,7 @@ Test HTML code generation
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import codecs
 import io
 from unittest import TestCase
 
@@ -34,4 +35,32 @@ class TestUtils(TestCase):
     def test_camel(self):
         self.assertEqual(utils.camel('code_gen'), 'CodeGen')
         self.assertEqual(utils.camel('_code_gen'), 'CodeGen')
+
+    def _test_bom(self, bom, encoding):
+        test_string = 'Zażółć gęślą jaźń'
+        test_io = io.BytesIO(bom + test_string.encode(encoding))
+        detected_encoding = utils.try_detect_encoding(test_io)
+        self.assertEqual(codecs.lookup(detected_encoding), codecs.lookup(encoding))
+        decoded = codecs.getreader(detected_encoding)(test_io).read()
+        self.assertEqual(decoded, test_string)
+
+    def _test_magic(self, encoding):
+        test_string = 'Zażółć gęślą jaźń'
+        magic = '; -*- coding: {} -*-\n'.format(encoding)
+        # Magic comment must be included in resulting stream!
+        test_string = magic + test_string 
+        test_io = io.BytesIO(test_string.encode(encoding))
+        detected_encoding = utils.try_detect_encoding(test_io)
+        self.assertEqual(codecs.lookup(detected_encoding), codecs.lookup(encoding))
+        decoded = codecs.getreader(detected_encoding)(test_io).read()
+        self.assertEqual(decoded, test_string)
+
+    def test_try_detect_encoding(self):
+        self._test_bom(codecs.BOM_UTF8, 'utf8')
+        self._test_bom(codecs.BOM_UTF16_LE, 'utf-16-le')
+        self._test_bom(codecs.BOM_UTF16_BE, 'utf-16-be')
+        self._test_bom(codecs.BOM_UTF32_LE, 'utf-32-le')
+        self._test_bom(codecs.BOM_UTF32_BE, 'utf-32-be')
+        self._test_magic('iso-8859-2')
+        self._test_magic('utf-8')
 
