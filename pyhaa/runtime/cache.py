@@ -18,12 +18,47 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from collections import Counter
+import heapq
+
+class Count:
+    '''
+    Minimalistic implementation of "mutable string"
+    For use in Counter
+    '''
+    __slots__ = 'value'
+
+    def __init__(self):
+        self.value = 0
+
+    def add(self, other):
+        self.value += other
+        return self.value
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+class Counter(dict):
+    '''
+    Alternative partial microimplementation of collections.Counter
+    '''
+    def least_used(self, n):
+        return heapq.nsmallest(n, self.items(), lambda x: x[1].value)
+    
+    def normalize(self):
+        minimum = -min(self.values()).value
+        for value in self.values():
+            value.add(minimum)
+
+    def init(self, key):
+        self[key] = Count()
 
 class TemplateCache:
-    def __init__(self, size, check_every=10):
+    '''
+    Dumb aging LFU cache
+    '''
+    def __init__(self, size, grace=10):
         self.size = size
-        self.check_every = check_every
+        self.grace = grace
 
         self.gets = 0
         self.values = {}
@@ -33,19 +68,20 @@ class TemplateCache:
 
     def store(self, key, value):
         self.values[key] = value
-        self.uses[key] = 0
+        self.uses.init(key)
 
     def get(self, key):
         value = self.values.get(key)
         if value is None:
             return None
-        # Substract, so most_common will actually return least commonly used
-        self.uses[key] -= 1
 
-        self.gets = (self.gets + 1) % self.check_every
+        self.uses[key].add(1)
+
+        self.gets = (self.gets + 1) % self.grace
         if not self.gets:
-            for key, _ in self.uses.most_common(len(self.values) - self.size):
+            for key, _ in self.uses.least_used(len(self.values) - self.size):
                 self.remove(key)
+            self.uses.normalize()
         
         return value
         
@@ -57,4 +93,7 @@ class TemplateCache:
         self.gets = 0
         self.values.clear()
         self.uses.clear()
+
+class BytecodeCache:
+    pass
 
