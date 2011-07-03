@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+'''
+Testing template loading from files
+'''
+
 # Pyhaa - Templating system for Python 3
 # Copyright (c) 2011 Tomasz Kowalczyk
 # Contact e-mail: code@fluxid.pl
@@ -18,6 +22,22 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from .parsing.errors import *
-from .shorthands import *
-from .environment import *
+from unittest import TestCase
+
+from pyhaa import (
+    html_render_to_string,
+    PyhaaEnvironment,
+)
+from pyhaa.runtime.loaders import FileSystemLoader
+
+class TestLoaders(TestCase):
+    def test_basic_load_and_render(self):
+        loader = FileSystemLoader(paths='./tests/files/', input_encoding = 'utf-8')
+        environment = PyhaaEnvironment(loader = loader)
+        template = environment.get_template('basic.pha')
+        rendered = html_render_to_string(template)
+        self.assertEqual(
+            rendered,
+            '<h1>ME GUSTA</h1>',
+        )
+
