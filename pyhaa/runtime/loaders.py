@@ -72,7 +72,7 @@ class FileSystemLoader(BaseLoader):
 
         paths = [paths] if isinstance(paths, str) else paths
         paths = [
-            os.path.realpath(os.path.expanduser(curpath)) + os.sep
+            os.path.realpath(os.path.expanduser(curpath))
             for curpath in paths
         ]
         # TODO check if paths are overlapping
@@ -80,14 +80,9 @@ class FileSystemLoader(BaseLoader):
         self.input_encoding = input_encoding
 
     def get_filepath(self, path):
-        # FIXME TODO XXX Process path
-        # 1. deal with absolute path
-        # 2. deal with convertion from posixpath to system os.path
-        # ????
+        path = os.path.normpath(path)
         for curpath in self.paths:
-            print (curpath, path)
             curpath = os.path.join(curpath, path)
-            print (curpath)
             if os.path.isfile(curpath):
                 return curpath
         return None
@@ -100,14 +95,16 @@ class FileSystemLoader(BaseLoader):
 
     def get_module(self, path, environment):
         encoding = self.input_encoding
-        path = self.get_filepath(path)
-        with open(path, 'br') as fp:
+        our_path = self.get_filepath(path)
+        if not our_path:
+            # TODO raise proper exception
+            raise Exception('File not found: "{}"'.format(path))
+        with open(our_path, 'br') as fp:
             if not encoding:
                 encoding = try_detect_encoding(fp) or 'utf-8'
             cfp = codecs.getreader(encoding)(fp)
 
             structure = environment.parse_io(cfp)
             code = environment.codegen_template(structure)
-            # TODO Cache for code
             return environment.compile_template(code)
 
