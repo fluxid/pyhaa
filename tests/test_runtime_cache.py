@@ -24,11 +24,11 @@ Testing cache
 
 from unittest import TestCase
 
-from pyhaa.runtime.cache import TemplateCache
+from pyhaa.runtime.cache import LFUCache
 
 class TestCache(TestCase):
     def test_template_cache(self):
-        cache = TemplateCache(2, 5)
+        cache = LFUCache(2, 2)
         # template cache doesn't really care about what is stored in it
         cache.store('a', 'a!')
         cache.store('b', 'b!')
@@ -38,21 +38,35 @@ class TestCache(TestCase):
         self.assertEqual(cache.get('a'), 'a!')
         self.assertEqual(cache.get('d'), 'd!')
         self.assertEqual(cache.get('a'), 'a!')
-        self.assertEqual(cache.get('c'), 'c!') # We should still have c
-        # in above call part of cache should be cleared
+        self.assertEqual(cache.get('c'), 'c!')
+        cache.store('e', 'e!')
+        # In above call cache should be cleaned up
         # Correct guess are b (used once) and b (never used)
-        # a ad d should have the same use count == 0 now
         self.assertEqual(cache.get('c'), None)
         self.assertEqual(cache.get('b'), None)
         self.assertEqual(cache.get('d'), 'd!')
         self.assertEqual(cache.get('a'), 'a!')
-        cache.store('e', 'e!')
         self.assertEqual(cache.get('a'), 'a!')
         self.assertEqual(cache.get('e'), 'e!')
         self.assertEqual(cache.get('e'), 'e!')
-        # a and e both have 2 uses, and d only 1 use
-        self.assertEqual(cache.get('d'), None)
+        cache.store('f', 'f!')
+        cache.store('g', 'g!')
+        # f - zero uses. Sorry, it didn't make it
+        self.assertEqual(cache.get('f'), None)
+        # g was added after cleanup
+        self.assertEqual(cache.get('g'), 'g!')
+        # e had more (two) uses than f but got removed too
+        self.assertEqual(cache.get('e'), None)
+        # a and d still on top...
+        self.assertEqual(cache.get('d'), 'd!')
+        self.assertEqual(cache.get('a'), 'a!')
 
-
-
+        # Duh, we shouldn't touch internals...
+        self.assertEqual(cache.offset, 3)
+        self.assertEqual(cache.cachedict['a'].priority, 5)
+        self.assertEqual(cache.cachedict['d'].priority, 4)
+        cache.reduce_offset()
+        self.assertEqual(cache.offset, 0)
+        self.assertEqual(cache.cachedict['a'].priority, 2)
+        self.assertEqual(cache.cachedict['d'].priority, 1)
 

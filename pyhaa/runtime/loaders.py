@@ -21,12 +21,12 @@
 import codecs
 import os.path
 
-from .cache import TemplateCache
+from .cache import LFUCache
 from ..utils import try_detect_encoding
 
 class BaseLoader:
     def __init__(self, template_cache_size = 100, bytecode_cache = None):
-        self.template_cache = TemplateCache(template_cache_size)
+        self.template_cache = LFUCache(template_cache_size)
         self.bytecode_cache = bytecode_cache
 
     def get_template_module(self, path, environment):

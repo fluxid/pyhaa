@@ -19,80 +19,72 @@
 # <http://www.gnu.org/licenses/>.
 
 import heapq
+from threading import RLock
 
-class Count:
+class _CachedElement:
+    __slots__ = ('value', 'priority')
+
+    def __init__(self, value, priority):
+        self.value = value
+        self.priority = 0
+
+class LFUCache:
     '''
-    Minimalistic implementation of "mutable string"
-    For use in Counter
+    Dumb LFU "aging" cache
     '''
-    __slots__ = 'value'
-
-    def __init__(self):
-        self.value = 0
-
-    def add(self, other):
-        self.value += other
-        return self.value
-
-    def __lt__(self, other):
-        return self.value < other.value
-
-class Counter(dict):
-    '''
-    Alternative partial microimplementation of collections.Counter
-    '''
-    def least_used(self, n):
-        return heapq.nsmallest(n, self.items(), lambda x: x[1].value)
-    
-    def normalize(self):
-        minimum = -min(self.values()).value
-        for value in self.values():
-            value.add(minimum)
-
-    def init(self, key):
-        self[key] = Count()
-
-class TemplateCache:
-    '''
-    Dumb aging LFU cache
-    '''
-    def __init__(self, size, grace=10):
-        self.size = size
+    def __init__(self, max_size, grace=20):
+        self.max_size = max_size
         self.grace = grace
 
-        self.gets = 0
-        self.values = {}
-        self.uses = Counter()
+        self.offset = 0
+        self.cachedict = {}
+
         # TODO
-        self.lock = None
+        self.lock = RLock()
 
     def store(self, key, value):
-        self.values[key] = value
-        self.uses.init(key)
+        with self.lock:
+            self.try_cleanup()
+            self.cachedict[key] = _CachedElement(value, self.offset)
+
+    def try_cleanup(self):
+        with self.lock:
+            over = len(self.cachedict) - self.max_size
+            if over - self.grace < 0:
+                return
+
+            smallest = heapq.nsmallest(over, self.cachedict.items(), lambda x: x[1].priority)
+            # This is the lowest priority so use it as offset
+            for key, _ in smallest:
+                del self.cachedict[key]
+
+            self.offset = min(x.priority for x in self.cachedict.values())
+            # Reduce offset if too high?
+
+    def reduce_offset(self):
+        with self.lock:
+            offset = self.offset
+            for value in self.cachedict.values():
+                value.priority -= offset
+            self.offset = 0
 
     def get(self, key):
-        value = self.values.get(key)
-        if value is None:
-            return None
-
-        self.uses[key].add(1)
-
-        self.gets = (self.gets + 1) % self.grace
-        if not self.gets:
-            for key, _ in self.uses.least_used(len(self.values) - self.size):
-                self.remove(key)
-            self.uses.normalize()
-        
-        return value
+        with self.lock:
+            element = self.cachedict.get(key)
+            if element is None:
+                return None
+            element.priority += 1
+            return element.value
         
     def remove(self, key):
-        del self.values[key]
-        del self.uses[key]
+        with self.lock:
+            del self.cachedict[key]
 
     def clear(self):
-        self.gets = 0
-        self.values.clear()
-        self.uses.clear()
+        with self.lock:
+            self.offset = 0
+            self.cachedict.clear()
+
 
 class BytecodeCache:
     pass
