@@ -24,6 +24,8 @@ Testing template loading from files
 
 from unittest import TestCase
 import os
+import os.path
+import tempfile
 
 from pyhaa import (
     html_render_to_string,
@@ -92,4 +94,62 @@ class TestLoaders(TestCase):
         os.utime('./tests/files/basic.pha', None)
         self._load_and_render(environment, 'basic.pha')
         self.assertFalse(reloaded)
+
+    def test_reload_on_path_change(self):
+        '''
+        Case: We have two paths. Template is in second.
+        After we load this template for the first time, we move
+        file from other location to the first one.
+        New template overlays the already loaded one - it would
+        match the same path.
+        Because we move file, its mtime may be older than mtime
+        of the already loaded one.
+        We should detect new file an reload template.
+        '''
+        tmpdir = tempfile.mkdtemp()
+        try:
+            paths = (
+                tmpdir,
+                './tests/files/',
+            )
+            loader = FileSystemLoader(paths=paths, input_encoding='utf-8')
+            environment = PyhaaEnvironment(loader = loader)
+
+            self.assertEqual(
+                self._load_and_render(environment, 'basic.pha'),
+                '<h1>ME GUSTA</h1>',
+            )
+
+            tmpfile = os.path.join(tmpdir, 'basic.pha')
+            try:
+                with open(tmpfile, 'w') as fp:
+                    fp.write('%strong reload!')
+
+                # Make sure file from first path is actually older
+                # Otherwise it happily reloads because of mtime change
+                # But it must reload because of different path/new file
+                os.utime('./tests/files/basic.pha', None)
+                newtime = os.path.getmtime(tmpfile) - 100
+                os.utime(tmpfile, (newtime, newtime))
+
+                self.assertEqual(
+                    self._load_and_render(environment, 'basic.pha'),
+                    '<strong>reload!</strong>',
+                )
+            finally:
+                os.remove(tmpfile)
+
+            environment.auto_reload = False
+            self.assertEqual(
+                self._load_and_render(environment, 'basic.pha'),
+                '<strong>reload!</strong>',
+            )
+            environment.auto_reload = True
+            self.assertEqual(
+                self._load_and_render(environment, 'basic.pha'),
+                '<h1>ME GUSTA</h1>',
+            )
+        finally:
+            os.rmdir(tmpdir)
+
 
