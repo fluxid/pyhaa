@@ -115,19 +115,20 @@ class FileSystemLoader(BaseLoader):
             # TODO raise proper exception
             raise Exception('Template not found: "{}"'.format(path))
         
-        token = os.path.getmtime(our_path)
+        mtime = os.path.getmtime(our_path)
 
         fp = open(our_path, 'br')
         if not encoding:
             encoding = try_detect_encoding(fp) or 'utf-8'
         cfp = codecs.getreader(encoding)(fp)
 
-        return cfp, our_path, token
+        return cfp, our_path, (our_path, mtime)
 
     def is_expired(self, path, environment, token):
+        old_our_path, old_mtime = token
         our_path = self.lookup_filename(path)
-        if not our_path:
+        if not our_path or old_our_path != our_path:
             return True
-        token2 = os.path.getmtime(our_path)
-        return token2 > token
+        mtime = os.path.getmtime(our_path)
+        return mtime > old_mtime
 
