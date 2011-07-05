@@ -18,6 +18,8 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+__version__ = 'git'
+
 from .parsing.errors import *
 from .shorthands import *
 from .environment import *

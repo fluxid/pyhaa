@@ -22,9 +22,21 @@ Testing cache
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import tempfile
+import os
+
 from unittest import TestCase
 
-from pyhaa.runtime.cache import LFUCache
+from pyhaa import (
+    html_render_to_string,
+    PyhaaEnvironment,
+)
+from pyhaa.runtime.cache import (
+    FilesystemBytecodeCache,
+    LFUCache,
+)
+
+from pyhaa.runtime.loaders import FilesystemLoader
 
 class TestCache(TestCase):
     def test_template_cache(self):
@@ -69,4 +81,89 @@ class TestCache(TestCase):
         self.assertEqual(cache.offset, 0)
         self.assertEqual(cache.cachedict['a'].priority, 2)
         self.assertEqual(cache.cachedict['d'].priority, 1)
+
+        cache.clear()
+        self.assertEqual(cache.get('a'), None)
+
+    def test_filesystem_bytecode_cache(self):
+        reloaded = False
+
+        class MyLoader(FilesystemLoader):
+            def get_bytecode(self, *args, **kwargs):
+                nonlocal reloaded
+                reloaded = True
+                return super().get_bytecode(*args, **kwargs)
+
+        filenames = set()
+        byte_loaded = False
+        byte_stored = False
+
+        class MyCache(FilesystemBytecodeCache):
+            def get(self, *args, **kwargs):
+                nonlocal byte_loaded
+                result = super().get(*args, **kwargs)
+                if result:
+                    byte_loaded = True
+                return result
+
+            def store(self, *args, **kwargs):
+                nonlocal byte_stored
+                byte_stored = True
+                return super().store(*args, **kwargs)
+
+            def build_filename(self, *args, **kwargs):
+                filename = super().build_filename(*args, **kwargs)
+                filenames.add(filename)
+                return filename
+
+        tmpdir = tempfile.mkdtemp(dir='.')
+        try:
+            loader = MyLoader(paths='./tests/files/', bytecode_cache = MyCache(storage_directory=tmpdir), input_encoding = 'utf-8')
+            environment = PyhaaEnvironment(loader = loader)
+
+            def test_render():
+                template = environment.get_template('basic.pha')
+                self.assertEqual(
+                    html_render_to_string(template),
+                    '<h1>ME GUSTA</h1>',
+                )
+
+            test_render()
+            self.assertTrue(byte_stored)
+            self.assertEqual(len(filenames), 1)
+            self.assertTrue(os.path.exists(list(filenames)[0]))
+            # OK, we confirmed cache stored *something*
+
+            reloaded = False
+            byte_stored = False
+            test_render()
+            self.assertFalse(reloaded)
+            self.assertFalse(byte_loaded)
+            # Cool, we didn't reload - this means we loaded from LFUCache...
+            # But...
+            loader.template_cache.clear() # yuck, internals again
+
+            test_render()
+            self.assertFalse(reloaded)
+            self.assertTrue(byte_loaded)
+            self.assertFalse(byte_stored)
+            # OK, we loaded from bytecache...
+            self.assertEqual(len(filenames), 1)
+            # And still, nothing changed... what about expiring?
+
+            byte_loaded = False
+            os.utime('./tests/files/basic.pha', None)
+            # We know LFU works so clear it so we test only bytecode cache
+            loader.template_cache.clear() # yuck, internals again
+            test_render()
+            # we load cache successfully ...
+            self.assertTrue(byte_loaded)
+            # ... but it ends up expired so we ...
+            self.assertTrue(reloaded)
+            # ... and store it again
+            self.assertTrue(byte_stored)
+        finally:
+            for filename in filenames:
+                os.remove(filename)
+            os.rmdir(tmpdir)
 

@@ -41,7 +41,6 @@ class BaseLoader:
                 return template
 
         bytecode = None
-        read_from_cache = False
         if not expired and self.bytecode_cache:
             bytecode = self.bytecode_cache.get(path)
             if bytecode:
@@ -50,17 +49,14 @@ class BaseLoader:
                 if expired:
                     self.bytecode_cache.remove(path)
                     bytecode = None
-                else:
-                    read_from_cache = True
 
         if not bytecode:
             bytecode, token = self.get_bytecode(path, environment)
+            if self.bytecode_cache:
+                self.bytecode_cache.store(path, bytecode, token) 
 
         template = environment.template_module_from_bytecode(bytecode)
-
         self.template_cache.store(path, (template, token))
-        if not read_from_cache and self.bytecode_cache:
-            self.bytecode_cache.store(path, bytecode, token) 
 
         return template
 

@@ -18,8 +18,19 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
+import errno
+import hashlib
 import heapq
+import marshal
+import os
+import pickle
+import sys
+import tempfile
 from threading import RLock
+
+from .. import __version__ as pyhaa_version
+
+CACHE_HEADER = ('pyhaa-{}-{:08x}'.format(pyhaa_version, sys.hexversion)).encode('ascii')
 
 class _CachedElement:
     __slots__ = ('value', 'priority')
@@ -87,5 +98,80 @@ class LFUCache:
 
 
 class BytecodeCache:
-    pass
+    def get(self, path):
+        raise NotImplementedError
+
+    def store(self, path, bytecode, token):
+        raise NotImplementedError
+
+    def remove(self, path):
+        raise NotImplementedError
+
+    def load_io(self, fp):
+        header = fp.read(len(CACHE_HEADER))
+        if header != CACHE_HEADER:
+            return None
+        meta = pickle.load(fp)
+        token = meta.get('token')
+        bytecode = marshal.load(fp)
+        return bytecode, token
+
+    def load_file(self, path):
+        try:
+            with open(path, 'rb') as fp:
+                return self.load_io(fp)
+        except IOError as exc:
+            if exc.errno != errno.ENOENT:
+                raise
+
+    def load_bytes(self, bts):
+        return self.load_io(io.BytesIO(bts))
+
+    def dump_io(self, fp, bytecode, token):
+        fp.write(CACHE_HEADER)
+        # Maybe there'll be more metadata
+        meta = dict(
+            token=token,
+        )
+        pickle.dump(meta, fp)
+        marshal.dump(bytecode, fp)
+
+    def dump_file(self, path, bytecode, token):
+        with open(path, 'wb') as fp:
+            return self.dump_io(fp, bytecode, token)
+
+    def dump_bytes(self, bts, bytecode, token):
+        bts = io.BytesIO()
+        self.dump_io(bts, bytecode, token)
+        return bts.get_value()
+
+
+class FilesystemBytecodeCache(BytecodeCache):
+    def __init__(self, storage_directory=None, pattern='_cache_{}.phac'):
+        if not storage_directory:
+            storage_directory = os.path.join(tempfile.gettempdir(), 'pyhaa_bytecode_cache')
+            try:
+                os.mkdir(storage_directory)
+            except OSError as exc:
+                if exc.errno != errno.EEXIST:
+                    raise
+        self.storage_directory = storage_directory
+        self.pattern = pattern
+
+    def build_filename(self, path):
+        hashed = hashlib.sha1(path.encode('utf8')).hexdigest()
+        return os.path.join(self.storage_directory, self.pattern.format(hashed))
+
+    def get(self, path):
+        return self.load_file(self.build_filename(path))
+
+    def store(self, path, bytecode, token):
+        self.dump_file(self.build_filename(path), bytecode, token)
+
+    def remove(self, path):
+        try:
+            return os.remove(self.build_filename(path))
+        except IOError as exc:
+            if exc.errno != errno.ENOENT:
+                raise
 

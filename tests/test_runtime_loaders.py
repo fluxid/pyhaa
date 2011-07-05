@@ -106,7 +106,7 @@ class TestLoaders(TestCase):
         of the already loaded one.
         We should detect new file an reload template.
         '''
-        tmpdir = tempfile.mkdtemp()
+        tmpdir = tempfile.mkdtemp(dir='.')
         try:
             paths = (
                 tmpdir,
