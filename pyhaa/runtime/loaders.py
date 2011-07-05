@@ -87,7 +87,7 @@ class BaseLoader:
         return False
 
 
-class FileSystemLoader(BaseLoader):
+class FilesystemLoader(BaseLoader):
     def __init__(self, paths = None, input_encoding = None, **kwargs):
         super().__init__(**kwargs)
 

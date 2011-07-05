@@ -31,7 +31,7 @@ from pyhaa import (
     html_render_to_string,
     PyhaaEnvironment,
 )
-from pyhaa.runtime.loaders import FileSystemLoader
+from pyhaa.runtime.loaders import FilesystemLoader
 
 class TestLoaders(TestCase):
     def _load_and_render(self, environment, path, current_path = None):
@@ -39,7 +39,7 @@ class TestLoaders(TestCase):
         return html_render_to_string(template)
 
     def test_basic_load_and_render(self):
-        loader = FileSystemLoader(paths='./tests/files/', input_encoding = 'utf-8')
+        loader = FilesystemLoader(paths='./tests/files/', input_encoding = 'utf-8')
         environment = PyhaaEnvironment(loader = loader)
         rendered = self._load_and_render(environment, 'basic.pha')
         self.assertEqual(
@@ -52,7 +52,7 @@ class TestLoaders(TestCase):
             './tests/files/lookup_tests/secondary',
             './tests/files/lookup_tests/main',
         )
-        loader = FileSystemLoader(paths=paths, input_encoding='utf-8')
+        loader = FilesystemLoader(paths=paths, input_encoding='utf-8')
         environment = PyhaaEnvironment(loader=loader)
 
         rendered = self._load_and_render(environment, 'common/parts/first.pha')
@@ -73,7 +73,7 @@ class TestLoaders(TestCase):
     def test_reload(self):
         reloaded = False
 
-        class MyLoader(FileSystemLoader):
+        class MyLoader(FilesystemLoader):
             def get_bytecode(self, *args, **kwargs):
                 nonlocal reloaded
                 reloaded = True
@@ -112,7 +112,7 @@ class TestLoaders(TestCase):
                 tmpdir,
                 './tests/files/',
             )
-            loader = FileSystemLoader(paths=paths, input_encoding='utf-8')
+            loader = FilesystemLoader(paths=paths, input_encoding='utf-8')
             environment = PyhaaEnvironment(loader = loader)
 
             self.assertEqual(
