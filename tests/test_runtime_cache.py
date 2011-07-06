@@ -153,8 +153,19 @@ class TestCache(TestCase):
 
             byte_loaded = False
             os.utime('./tests/files/basic.pha', None)
-            # We know LFU works so clear it so we test only bytecode cache
-            loader.template_cache.clear() # yuck, internals again
+            test_render()
+            # template cache returns expired token
+            # we shouldn't even try to load bytecode cache if we know already it's expired...
+            self.assertFalse(byte_loaded)
+            # but we reload and store succesfully
+            self.assertTrue(reloaded)
+            self.assertTrue(byte_stored)
+
+            reloaded = False
+            byte_loaded = False
+            byte_stored = False
+            os.utime('./tests/files/basic.pha', None)
+            loader.template_cache.clear() # don't use template cache at all this time
             test_render()
             # we load cache successfully ...
             self.assertTrue(byte_loaded)
