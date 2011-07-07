@@ -31,6 +31,7 @@ class HTMLTemplate(Template):
     encoding = 'utf-8'
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.tag_name_stack = list()
 
     def _ph_open_tag(self, name, id_, classes, attributes, self_close):

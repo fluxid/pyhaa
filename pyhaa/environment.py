@@ -34,27 +34,21 @@ class PyhaaEnvironment:
         output_encoding='utf-8',
         auto_reload = True,
     ):
+        if not parser_class:
+            from .parsing.parser import PyhaaParser
+            parser_class = PyhaaParser
+
+        if not codegen_class:
+            from .codegen.html import HTMLCodeGen
+            codegen_class = HTMLCodeGen
+
         self.loader = loader
         self.parser_class = parser_class
         self.codegen_class = codegen_class
         self.output_encoding = output_encoding
         self.auto_reload = auto_reload
 
-    def get_parser_class(self):
-        if self.parser_class:
-            return self.parser_class
-
-        from .parsing.parser import PyhaaParser
-        return PyhaaParser
-
-    def get_codegen_class(self):
-        if self.codegen_class:
-            return self.codegen_class
-
-        from .codegen.html import HTMLCodeGen
-        return HTMLCodeGen
-
-    def get_template(self, path, current_path=None):
+    def get_template_class(self, path, current_path=None):
         if current_path and not path.startswith('/'):
             path = posixpath.join(current_path, path)
 
@@ -66,10 +60,47 @@ class PyhaaEnvironment:
             # TODO Raise proper exception
             raise Exception
 
-        return self.loader.get_template_module(path, self)
+        return self.loader.get_template_class(path, self)
+
+    def get_template(self, path, current_path=None):
+        '''
+        Returns template instance along with complete parent chain
+        Inheritance linearization works as in C3 algorithm
+        '''
+
+        def in_tail(what, where):
+            idx = where.index(what)
+            return idx not in (-1, 0)
+
+        def merge_inheritance(list_):
+            # TODO Implement merging
+            # This code is only to plug current lack of code
+            return list_[0]
+
+        def load_inheritance(class_):
+            parents = [
+                self.get_template_class(ppath)
+                for ppath in class_.get_inheritance()
+            ]
+            loaded = [
+                load_inheritance(pclass)
+                for pclass in parents
+            ]
+            loaded.append(parents)
+            inheritance = [class_]
+            inheritance.extend(merge_inheritance(loaded))
+            return inheritance
+        
+        template = None
+        template_class = self.get_template_class(path, current_path)
+        linearized = load_inheritance(template_class)
+        for class_ in linearized:
+            template = class_(self, parent=template)
+
+        return template
 
     def parse_readline(self, readline):
-        parser = self.get_parser_class()()
+        parser = self.parser_class()
         parser.parse_readline(readline)
         parser.finish()
         return parser.structure
@@ -99,11 +130,11 @@ class PyhaaEnvironment:
     def codegen_structure(self, structure, **kwargs):
         bio = io.BytesIO()
         kwargs.setdefault('encoding', self.output_encoding)
-        cg = self.get_codegen_class()(structure, bio, **kwargs)
+        cg = self.codegen_class(structure, bio, **kwargs)
         cg.write()
         return bio.getvalue()
 
-    def template_module_from_bytecode(self, bytecode):
+    def template_class_from_bytecode(self, bytecode):
         dict_ = dict()
         exec(bytecode, dict_, dict_)
         return dict_[dict_['template_class_name']]

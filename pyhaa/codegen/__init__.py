@@ -118,6 +118,20 @@ class CodeGen:
             '',
         )
 
+    def write_inheritance(self):
+        self.write_io(
+            '@staticmethod',
+            'def get_inheritance():'
+        )
+        self.indent()
+        self.write_io(
+            'return ({})'.format(', '.join((
+                '({})'.format(inherits)
+                for inherits in self.structure.inheritance
+            ))),
+        )
+        self.dedent()
+
     def write_base_imports(self):
         self.write_io(
             *self.imports
@@ -173,7 +187,7 @@ class CodeGen:
     def write_structure(self):
         # TODO Write template "globals" here
         self.write_class()
-        # TODO Write inheritance stuff here
+        self.write_inheritance()
         # TODO Write partial stuff here
         self.write_root_node(self.structure.tree)
 

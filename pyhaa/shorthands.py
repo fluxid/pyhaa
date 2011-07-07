@@ -26,6 +26,8 @@ from .parsing.parser import PyhaaParser
 from .runtime import decapsulate_exceptions, EncapsulatedException
 from .utils import iter_flatten
 
+# TODO Scrap all of below and enforce usage of environment!
+
 __all__ = (
     'codegen_template',
     'compile_template',
@@ -62,7 +64,8 @@ def compile_template(code):
 
 def html_render_to_iterator(template, function_name=None, args=None, kwargs=None):
     if isinstance(template, type):
-        template = template()
+        # Aaargh
+        template = template(None)
     args = args or list()
     kwargs = kwargs or dict()
     function = template

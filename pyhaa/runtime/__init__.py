@@ -23,7 +23,9 @@ from contextlib import contextmanager
 from sys import exc_info
 
 class Template:
-    pass
+    def __init__(self, environment, parent = None):
+        self.environment = environment
+        self.parent = parent
 
 class EncapsulatedException(Exception):
     '''

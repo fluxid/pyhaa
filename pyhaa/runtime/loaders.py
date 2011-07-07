@@ -29,7 +29,7 @@ class BaseLoader:
         self.template_cache = LFUCache(template_cache_size)
         self.bytecode_cache = bytecode_cache
 
-    def get_template_module(self, path, environment):
+    def get_template_class(self, path, environment):
         template = self.template_cache.get(path)
         expired = None
         if template:
@@ -55,7 +55,7 @@ class BaseLoader:
             if self.bytecode_cache:
                 self.bytecode_cache.store(path, bytecode, token) 
 
-        template = environment.template_module_from_bytecode(bytecode)
+        template = environment.template_class_from_bytecode(bytecode)
         self.template_cache.store(path, (template, token))
 
         return template
