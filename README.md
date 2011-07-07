@@ -47,6 +47,8 @@ TODO
 
 Things I left behind for later, not those "yet to be touched".
 
+1. Clean up API, make it more flexible and less messy
+1. Remove `shorthands` module and make unit-tests use environment
 1. Rethink how to handle Python tokenizer readahead
 1. Better unit-test error handling
 1. Reorganize and clean up code in parser a bit more
@@ -59,10 +61,7 @@ What still needs some thought
 
 Things I didn't yet start implementing
 
-1. How should inheritance actually work? How about creating dynamically a new type and instantiating it immediately?
-1. How should template loading work? (Work started)
-1. What syntax for module/class level code? (How to differentiate code meant to be placed on module or class level?
-   When should be default `body` function opened?) (Work started)
+(None, for now...)
 
 Copyright and licence
 ---------------------
