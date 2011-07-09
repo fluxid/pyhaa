@@ -1,0 +1,4 @@
+`inherit 'comp_A.pha'
+B
+!sp
+=self.parent()
