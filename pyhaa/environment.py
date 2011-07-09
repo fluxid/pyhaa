@@ -21,6 +21,8 @@
 import io
 import posixpath
 
+from .utils import sequence_flatten
+
 __all__ = (
     'PyhaaEnvironment',
 )
@@ -136,7 +138,7 @@ class PyhaaEnvironment:
         def load_classes(class_):
             onpath.add(class_)
             parents = []
-            for ppath in class_.get_inheritance():
+            for ppath in sequence_flatten(class_.get_inheritance()):
                 # TODO Include current path!!!
                 parent_class = self.get_template_class(ppath) # , current_path = class_.path) or smth
 
@@ -158,9 +160,10 @@ class PyhaaEnvironment:
         '''
         Returns template instance along with complete parent chain
         '''
-        
         template_class = self.get_template_class(path, current_path)
         linearized = self.get_inheritance_chain(template_class)
+        linearized.reverse()
+
         template = None
         for class_ in linearized:
             template = class_(self, parent=template)

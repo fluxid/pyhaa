@@ -154,6 +154,27 @@ def iter_flatten(generator):
 
         yield result
 
+def sequence_flatten(seq):
+    if isinstance(seq, (bytes, str)) or not hasattr(seq, '__iter__'):
+        yield seq
+    iter_stack = list()
+    current_iter = iter(seq)
+    while True:
+        try:
+            result = next(current_iter)
+        except StopIteration:
+            if not iter_stack:
+                break
+            current_iter = iter_stack.pop()
+            continue
+
+        if hasattr(result, '__iter__') and not isinstance(result, (bytes, str)):
+            iter_stack.append(current_iter)
+            current_iter = iter(result)
+            continue
+
+        yield result
+
 def _decamel(match):
     return '_' + match.group(0).lower()
 
