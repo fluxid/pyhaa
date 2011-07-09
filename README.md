@@ -48,6 +48,8 @@ TODO
 Things I left behind for later, not those "yet to be touched".
 
 1. Clean up API, make it more flexible and less messy
+1. Raise proper exceptions (move parsing.errors up one level and refactor)
+1. Think of optimizations and code reorganization for get_inheritance_chain
 1. Remove `shorthands` module and make unit-tests use environment
 1. Rethink how to handle Python tokenizer readahead
 1. Better unit-test error handling
