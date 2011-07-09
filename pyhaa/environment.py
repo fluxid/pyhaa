@@ -62,38 +62,106 @@ class PyhaaEnvironment:
 
         return self.loader.get_template_class(path, self)
 
-    def get_template(self, path, current_path=None):
+    def get_inheritance_chain(self, template_class):
         '''
-        Returns template instance along with complete parent chain
-        Inheritance linearization works as in C3 algorithm
+        Returns "teplate precedence list"
+        Inheritance linearization works as in C3 algorithm, used in Python itself.
         '''
+        classes = dict()
+        onpath = set()
 
-        def in_tail(what, where):
-            idx = where.index(what)
-            return idx not in (-1, 0)
+        def in_tail(what, where, whence):
+            try:
+                return where.index(what) > whence
+            except ValueError:
+                return False
 
         def merge_inheritance(list_):
-            # TODO Implement merging
-            # This code is only to plug current lack of code
-            return list_[0]
+            # Do as in cpython's typeobject.c - store positions, don't pop from lists
+            positions = [0]*len(list_)
+            empty = 0
+            cont = True
+            while cont:
+                cont = False
+                for idx, lst in enumerate(list_):
+                    pos = positions[idx]
+
+                    # Check if list is empty
+                    if pos >= len(lst):
+                        # it's empty
+                        empty += 1
+                        continue
+
+                    head = lst[pos]
+
+                    # check if candidate is in tail of any of the lists
+                    found_tail = False
+                    for lst in list_:
+                        if in_tail(head, lst, pos):
+                            found_tail = True
+                            break
+                    if found_tail:
+                        continue
+                    
+                    # yield it to line
+                    yield head
+
+                    # remove candidate from heads
+                    for idx, lst in enumerate(list_):
+                        pos = positions[idx]
+                        if pos < len(lst) and lst[pos] == head:
+                            positions[idx] = pos + 1
+
+                    cont = True
+                    break
+
+            if empty == len(list_):
+                # OK, we emptied all the lists
+                return
+            raise Exception('Failed to resolve inheritance precedence')
 
         def load_inheritance(class_):
-            parents = [
-                self.get_template_class(ppath)
-                for ppath in class_.get_inheritance()
-            ]
+            inheritance = [class_]
+            parents = classes[class_]
+            if not parents:
+                return inheritance
             loaded = [
                 load_inheritance(pclass)
                 for pclass in parents
             ]
             loaded.append(parents)
-            inheritance = [class_]
             inheritance.extend(merge_inheritance(loaded))
             return inheritance
+
+        def load_classes(class_):
+            onpath.add(class_)
+            parents = []
+            for ppath in class_.get_inheritance():
+                # TODO Include current path!!!
+                parent_class = self.get_template_class(ppath) # , current_path = class_.path) or smth
+
+                if parent_class in onpath:
+                    raise Exception('Loop detected in inheritance tree!')
+
+                if parent_class not in classes:
+                    load_classes(parent_class)
+
+                parents.append(parent_class)
+            classes[class_] = parents
+            onpath.remove(class_)
+
+        # Load all classes in inheritance tree
+        load_classes(template_class)
+        return load_inheritance(template_class)
+
+    def get_template(self, path, current_path=None):
+        '''
+        Returns template instance along with complete parent chain
+        '''
         
-        template = None
         template_class = self.get_template_class(path, current_path)
-        linearized = load_inheritance(template_class)
+        linearized = self.get_inheritance_chain(template_class)
+        template = None
         for class_ in linearized:
             template = class_(self, parent=template)
 
