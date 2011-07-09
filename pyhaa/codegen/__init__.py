@@ -125,8 +125,8 @@ class CodeGen:
         )
         self.indent()
         self.write_io(
-            'return ({})'.format(', '.join((
-                '({})'.format(inherits)
+            'return ({})'.format(' '.join((
+                '({}),'.format(inherits)
                 for inherits in self.structure.inheritance
             ))),
         )
