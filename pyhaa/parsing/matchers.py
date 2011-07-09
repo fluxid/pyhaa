@@ -231,3 +231,9 @@ def PK(value, spaces=False):
         regex = r'\s*' + regex
     return MRE(regex.format(value))
 
+def MSS(value):
+    '''
+    Match string and whiespace after it
+    '''
+    return MRE('{}\s+'.format(re.escape(value)))
+

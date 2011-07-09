@@ -96,11 +96,11 @@ pyhaa_lexer = dict(
     ),
     head_statement = dict(
         match = (
-            'head_inherit'
+            'head_inherit',
         ),
     ),
     head_inherit = dict(
-        match = MS('inherit'),
+        match = matchers.MSS('inherit'),
         after = 'head_inherit_expression',
     ),
     head_inherit_expression = dict(

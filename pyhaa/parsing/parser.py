@@ -225,7 +225,7 @@ class PyhaaParser(Parser):
     
     # HEAD stuff
     def handle_head_inherit_expression(self, match):
-        self.structure.inherit.append(match)
+        self.structure.inheritance.append(match)
 
     # SMALL stuff
     def handle_text(self, match):
