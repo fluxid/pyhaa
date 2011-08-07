@@ -193,3 +193,39 @@ class TestBasicTags(TestCase):
         self.assertIs(tag3.next_sibling, tag4)
         self.assertIs(tag4.prev_sibling, tag3)
 
+    def test_deep(self):
+        '''
+        Test deep structures, as I'm not 100% sure
+        if dedent and node closing works correctly.
+        '''
+        tree = parse_string(jl(
+            '% % %', # 1 3 4
+            '  % %', # 5 7
+            '    % % %', # 8 9 10
+            '      % %', # 11 13
+            '      %', # 12
+            '  % %', # 6 14
+            '    % %', # 15 16
+            '      %', # 17
+            '      % %', # 18 19
+            '%', # 2
+        )).tree
+        # Let's be sure
+        self.assertIs(tree.current, tree)
+        # Unfold tree
+        tag1, tag2 = tree
+        tag3, = tag1
+        tag4, = tag3
+        tag5, tag6 = tag4
+        tag7, = tag5
+        tag8, = tag7
+        tag9, = tag8
+        tag10, = tag9
+        tag11, tag12 = tag10
+        tag13, = tag11
+        tag14, = tag6
+        tag15, = tag14
+        tag16, = tag15
+        tag17, tag18 = tag16
+        tag19, = tag18
+
