@@ -88,7 +88,7 @@ class PyhaaSyntaxInfo:
         if self.overwrite:
             value = self.overwrite.get(name)
         if value is None:
-            value = getattr(self.parser, name)
+            value = getattr(self.parser, name, None)
         return value
 
     @log_error(log)

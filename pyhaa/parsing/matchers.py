@@ -66,6 +66,7 @@ class PythonStatementMatcher(Matcher):
     should_check_ast = True
     break_at_colon = False
     break_at_keyword = []
+    break_at_unknown_bracket = False
 
     def __init__(self, break_at_colon = None, break_at_keyword = None):
         if not break_at_keyword is None:
@@ -111,12 +112,18 @@ class PythonStatementMatcher(Matcher):
                 if ttype == tokenize.OP:
                     if tstring in L_BRACKETS:
                         stack.append(PAIRED_BRACKETS[tstring])
-                    elif tstring in R_BRACKETS and tstring != stack.pop():
-                        raise PyhaaSyntaxError(
-                            SYNTAX_INFO.UNBALANCED_BRACKETS,
-                            parser,
-                            dict(current_pos = pos + scol),
-                        )
+                    elif tstring in R_BRACKETS:
+                        if not stack and self.break_at_unknown_bracket:
+                            # Remove matched braket from line
+                            ecol -= 1
+                            break
+
+                        if not stack or tstring != stack.pop():
+                            raise PyhaaSyntaxError(
+                                SYNTAX_INFO.UNBALANCED_BRACKETS,
+                                parser,
+                                dict(current_pos = pos + scol),
+                            )
                     elif self.break_at_colon and tstring == ':' and not stack:
                         # Get back one char, so ast won't whine about
                         # syntax error caused by colon
@@ -147,6 +154,11 @@ class PythonStatementMatcher(Matcher):
 
         if self.should_check_ast:
             jlines2 = (jlines+'\n').encode('utf8')
+            context = self.get_context(line)
+            subtract = 0
+            if context:
+                jlines2 = context[0] + jlines2 + context[1]
+                subtract = len(context[0])
             with clear_exception_context(PyhaaSyntaxError):
                 try:
                     ast_tree = ast.parse(jlines2)
@@ -155,9 +167,11 @@ class PythonStatementMatcher(Matcher):
                     # Even if I give normal string to parse, I'll get invalid
                     # offset if line has unicode characters before it
                     fragment = jlines2[:e.offset].decode('utf8')
-                    # substract 1 because python parser counts from one, and we
+                    # subtract 1 because python parser counts from one, and we
                     # count from zero
-                    offset = len(fragment) - 1
+                    # We also subtract length of context code prepended to line
+                    # Use max for case if context code is messed up
+                    offset = max(len(fragment) - 1 - subtract, 0)
                     raise PyhaaSyntaxError(
                         SYNTAX_INFO.PYTHON_SYNTAX_ERROR,
                         parser,
@@ -178,6 +192,16 @@ class PythonStatementMatcher(Matcher):
 
     def check_ast(self, parser, line, pos, ast_tree):
         pass
+
+    def get_context(self, line):
+        '''
+        This returns context code before and after matched fragment of code.
+        It is needed for ast parser so we can check syntax for small parts
+        of code in larger code (e.g. list of function attributes).
+        Should return None or 2-tuple with bytes - code before and after to
+        be added.
+        '''
+        return None
 
 
 class PythonDictMatcher(PythonStatementMatcher):
@@ -222,6 +246,13 @@ class PythonTargetMatcher(PythonExpressionMatcher):
             )
 
 
+class PythonParameterListMatcher(PythonStatementMatcher):
+    break_at_unknown_bracket = True
+
+    def get_context(self, line):
+        return (b'def noname(', b'): pass')
+
+
 def PK(value, spaces=False):
     '''
     Python keyword matcher - basicaly w word and any amount of whitespace
@@ -236,4 +267,21 @@ def MSS(value):
     Match string and whiespace after it
     '''
     return MRE('{}\s+'.format(re.escape(value)))
+
+class PI(MRE):
+    '''
+    Matches Python identifier
+    '''
+    def __init__(self):
+        super().__init__('\w+')
+
+    def match(self, *args, **kwargs):
+        result = super().match(*args, **kwargs)
+        if not result:
+            return None
+        idx, result = result
+        result = result.group(0)
+        if result.isidentifier():
+            return idx, result
+        return None
 

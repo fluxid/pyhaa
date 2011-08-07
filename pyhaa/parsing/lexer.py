@@ -97,6 +97,7 @@ pyhaa_lexer = dict(
     head_statement = dict(
         match = (
             'head_inherit',
+            'head_partial',
         ),
     ),
     head_inherit = dict(
@@ -105,6 +106,26 @@ pyhaa_lexer = dict(
     ),
     head_inherit_expression = dict(
         match = matchers.PythonExpressionListMatcher(),
+        after = 'line_end',
+    ),
+    head_partial = dict(
+        match = matchers.MSS('def'),
+        after = 'head_partial_name',
+    ),
+    head_partial_name = dict(
+        match = matchers.PI(),
+        after = 'head_partial_left_paren',
+    ),
+    head_partial_left_paren = dict(
+        match = MRE('\s*\('),
+        after = 'head_partial_parameters',
+    ),
+    head_partial_parameters = dict(
+        match = matchers.PythonParameterListMatcher(),
+        after = 'head_partial_right_paren',
+    ),
+    head_partial_right_paren = dict(
+        match = MS('):'),
         after = 'line_end',
     ),
 
