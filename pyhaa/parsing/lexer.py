@@ -36,20 +36,20 @@ def plexer_raise(eidd):
 def plexer_pass(parser):
     pass
 
-def next_line(parser):
+def next_element(parser):
     if parser.body_started:
-        return 'line'
+        return 'element'
     return 'head'
 
 
 pyhaa_lexer = dict(
-    _begin = 'head',
+    _begin = 'line',
 
     # BASICS
     head = dict(
         match = (
             'head_statement_start',
-            'line',
+            'element',
         ),
     ),
     line = dict(
@@ -60,7 +60,7 @@ pyhaa_lexer = dict(
     ),
     indent = dict(
         match = MRE('[ \t]*'),
-        after = 'element',
+        after = next_element,
     ),
     element = dict(
         match = (
@@ -86,7 +86,7 @@ pyhaa_lexer = dict(
     ),
     line_end = dict(
         match = MRE('\s*$'),
-        after = next_line,
+        after = 'line',
     ),
 
     # HEAD statements

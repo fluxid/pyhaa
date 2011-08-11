@@ -39,9 +39,12 @@ class PyhaaParent:
             other.prev_sibling = last
         self.children.append(other)
         return self
-    
+
     def __iter__(self):
         return iter(self.children)
+
+    def __len__(self):
+        return len(self.children)
 
     def __repr__(self):
         return '<{} {} children>'.format(
@@ -51,21 +54,14 @@ class PyhaaParent:
 
 
 class PyhaaTree(PyhaaParent):
-    def __init__(self, **kwargs):
-        self.current = self
-        super().__init__(**kwargs)
+    pass
 
-    def append(self, other):
-        if self.current is self:
-            super().append(other)
-        else:
-            self.current.append(other)
-        self.current = other
 
-    def close(self, times = 1):
-        for i in range(times):
-            if self.current is not self:
-                self.current = self.current.parent
+class PyhaaPartial(PyhaaTree):
+    def __init__(self, name, arguments, **kwargs):
+        self.name = name
+        self.arguments = arguments
+        super(PyhaaPartial, self).__init__(**kwargs)
 
 
 class PyhaaNode:
@@ -124,8 +120,33 @@ class PyhaaStructure:
     Template document structure
     '''
     def __init__(self):
+        # Contains main body node tree
         self.tree = PyhaaTree()
+        # Contains list of expressions - inheritance info
         self.inheritance = []
+        # Contains dict of tuples (parameters, tree) where key is partial name
+        self.partials = dict()
+        # Contains current tree we operate on
+        self.current = self.tree
+        # Contains stack of opened nodes
+        self.opened = []
+
+    def append(self, other):
+        self.current.append(other)
+        self.opened.append(self.current)
+        self.current = other
+
+    def open_partial(self, name, arguments):
+        partial = PyhaaPartial(name=name, arguments=arguments)
+        self.partials[name] = partial
+        self.opened.append(self.current)
+        self.current = partial
+
+    def close(self, times = 1):
+        while times > 0 and self.opened:
+            self.current = self.opened.pop()
+            times -= 1
+        return times
 
 
 # Node types
