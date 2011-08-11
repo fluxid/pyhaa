@@ -24,11 +24,12 @@ Test HTML code generation
 
 import codecs
 import io
-from unittest import TestCase
 
 from pyhaa import utils
 
-class TestUtils(TestCase):
+from .helpers import PyhaaTestCase
+
+class TestUtils(PyhaaTestCase):
     def test_decamel(self):
         self.assertEqual(utils.decamel('CodeGen'), '_code_gen')
 

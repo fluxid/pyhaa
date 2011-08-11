@@ -22,17 +22,15 @@ Test basic utility function
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
+from pyhaa.utils.cgrt_common import prepare_for_tag as pft
 
-from pyhaa.utils.cgrt_common import (
-    prepare_for_tag as pft,
-)
+from .helpers import PyhaaTestCase
 
 def so(value):
     # reorder as would set do
     return ' '.join(set(value.split(' ')))
 
-class TestUtilsCgrtCommon(TestCase):
+class TestUtilsCgrtCommon(PyhaaTestCase):
     
     def test_prepare_for_tag_basic(self):
         self.assertSequenceEqual(

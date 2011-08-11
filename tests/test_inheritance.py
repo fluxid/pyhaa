@@ -22,7 +22,6 @@ Test template inheritance
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
 import os
 import os.path
 import tempfile
@@ -33,7 +32,9 @@ from pyhaa import (
 )
 from pyhaa.runtime.loaders import FilesystemLoader
 
-class TestLoaders(TestCase):
+from .helpers import PyhaaTestCase
+
+class TestLoaders(PyhaaTestCase):
     def setUp(self):
         loader = FilesystemLoader(paths='./tests/files/inheritance', input_encoding = 'utf-8')
         self.environment = PyhaaEnvironment(loader = loader)

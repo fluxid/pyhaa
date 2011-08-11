@@ -25,8 +25,6 @@ Testing cache
 import tempfile
 import os
 
-from unittest import TestCase
-
 from pyhaa import (
     html_render_to_string,
     PyhaaEnvironment,
@@ -35,10 +33,11 @@ from pyhaa.runtime.cache import (
     FilesystemBytecodeCache,
     LFUCache,
 )
-
 from pyhaa.runtime.loaders import FilesystemLoader
 
-class TestCache(TestCase):
+from .helpers import PyhaaTestCase
+
+class TestCache(PyhaaTestCase):
     def test_template_cache(self):
         cache = LFUCache(2, 2)
         # template cache doesn't really care about what is stored in it

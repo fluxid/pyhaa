@@ -22,16 +22,14 @@ Testing tags with set class and/or id
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
-
 from pyhaa import (
     parse_string,
 )
 
-from .helpers import jl
+from .helpers import jl, PyhaaTestCase
 
 
-class TestTagsWithIdClass(TestCase):
+class TestTagsWithIdClass(PyhaaTestCase):
     def test_only_class(self):
         tree = parse_string(jl(
             '.foo',

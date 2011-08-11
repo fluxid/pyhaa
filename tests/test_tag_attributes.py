@@ -22,8 +22,6 @@ Testing basic tag structures and pyhaa tree structure in general
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
-
 from pyhaa import (
     parse_string,
 )
@@ -31,23 +29,9 @@ from pyhaa.utils.cgrt_common import (
     prepare_for_tag as pft,
 )
 
-from .helpers import jl
+from .helpers import jl, PyhaaTestCase
 
-class TestTagAttributes(TestCase):
-    def assertAttributesEqual(self, tag, attributes):
-        _, tag_attributes = pft(None, None, None, (
-            (
-                eval(value)
-                if isinstance(value, str) else
-                value
-            )
-            for value in tag.attributes_set
-        ))
-        self.assertDictEqual(
-            tag_attributes,
-            attributes,
-        )
-
+class TestTagAttributes(PyhaaTestCase):
     def test_empty_attributes(self):
         tree = parse_string(jl(
             '%',

@@ -23,14 +23,13 @@ Test code generation
 # <http://www.gnu.org/licenses/>.
 
 import io
-from unittest import TestCase
 
 from pyhaa import (
     codegen,
     parse_string,
 )
 
-from .helpers import jl
+from .helpers import jl, PyhaaTestCase
 
 class TestingCodeGen(codegen.CodeGen):
     def __init__(self, *args, **kwargs):
@@ -41,7 +40,7 @@ class TestingCodeGen(codegen.CodeGen):
         self.called_functions.append(codegen.name_node_handling_function(prefix, node))
 
 
-class TestCodegen(TestCase):
+class TestCodegen(PyhaaTestCase):
     def test_basic_codegen(self):
         structure = parse_string(jl(
             '%a',

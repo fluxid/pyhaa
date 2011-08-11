@@ -22,7 +22,6 @@ Testing template loading from files
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
 import os
 import os.path
 import tempfile
@@ -33,7 +32,9 @@ from pyhaa import (
 )
 from pyhaa.runtime.loaders import FilesystemLoader
 
-class TestLoaders(TestCase):
+from .helpers import PyhaaTestCase
+
+class TestLoaders(PyhaaTestCase):
     def _load_and_render(self, environment, path, current_path = None):
         template = environment.get_template(path, current_path)
         return html_render_to_string(template)

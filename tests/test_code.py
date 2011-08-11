@@ -21,16 +21,14 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
-
 from pyhaa import (
     parse_string,
     structure,
 )
 
-from .helpers import jl
+from .helpers import jl, PyhaaTestCase
 
-class TestCode(TestCase):
+class TestCode(PyhaaTestCase):
     def test_basic_expressions(self):
         tree = parse_string(jl(
             '%placeholder',

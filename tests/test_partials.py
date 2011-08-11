@@ -22,18 +22,31 @@ Testing partial stuff...
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
-
 from pyhaa import (
     parse_string,
     structure,
 )
 
-from .helpers import jl
+from .helpers import jl, PyhaaTestCase
 
-class TestPartials(TestCase):
-    def test_basic_partial(self):
-        structure = parse_string(jl(
+class TestPartials(PyhaaTestCase):
+    def test_basic_partial_one(self):
+        struct = parse_string(jl(
+            '`def hello(a, b, c):',
+            '  %h1 partial',
+            '  =a',
+            '  =b',
+            '  =c',
+            '=self.hello("a", "b", "c")',
+        ))
+        self.assertEqual(len(struct.partials), 1)
+        self.assertIn('hello', struct.partials)
+        code1, = struct.tree
+        self.assert_(isinstance(code1, structure.Expression))
+        self.assertEqual(len(struct.partials['hello']), 4)
+
+    def test_basic_partial_two(self):
+        struct = parse_string(jl(
             '`def hello(a, b, c):',
             '  %h1 partial',
             '  =a',
@@ -44,13 +57,22 @@ class TestPartials(TestCase):
             '=self.hello("a", "b", "c")',
             '=self.lol()',
         ))
-        self.assertEqual(len(structure.partials), 2)
-        self.assertIn('hello', structure.partials)
-        self.assertIn('lol', structure.partials)
-        code1, code2 = structure.tree
+        self.assertEqual(len(struct.partials), 2)
+        self.assertIn('hello', struct.partials)
+        self.assertIn('lol', struct.partials)
+        code1, code2 = struct.tree
         self.assert_(isinstance(code1, structure.Expression))
         self.assert_(isinstance(code2, structure.Expression))
-        self.assertEqual(len(structure.partials['hello']), 4)
-        self.assertEqual(len(structure.partials['lol']), 1)
-        
+        self.assertEqual(len(struct.partials['hello']), 4)
+        self.assertEqual(len(struct.partials['lol']), 1)
+
+    def test_error_nested_partial(self):
+        self.assertPSE(
+            'SYNTAX_ERROR',
+            parse_string,
+            jl(
+                '`def a():',
+                '  `def b():',
+            )
+        )
 

@@ -22,11 +22,11 @@ Utility testing
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from unittest import TestCase
-
 from pyhaa.utils import encode
 
-class TestUtilsEncode(TestCase):
+from .helpers import PyhaaTestCase
+
+class TestUtilsEncode(PyhaaTestCase):
     def test_encoding_basic(self):
         self.assertEqual(
             encode.entity_encode('<a href="#">\'oh&nbsp;wow\'</a>'),
