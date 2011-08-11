@@ -36,22 +36,10 @@ def plexer_raise(eidd):
 def plexer_pass(parser):
     pass
 
-def next_element(parser):
-    if parser.body_started:
-        return 'element'
-    return 'head'
-
-
 pyhaa_lexer = dict(
     _begin = 'line',
 
     # BASICS
-    head = dict(
-        match = (
-            'head_statement_start',
-            'element',
-        ),
-    ),
     line = dict(
         match = (
             'line_end', # Basically an empty line
@@ -60,13 +48,14 @@ pyhaa_lexer = dict(
     ),
     indent = dict(
         match = MRE('[ \t]*'),
-        after = next_element,
+        after = 'element',
     ),
     element = dict(
         match = (
             'escape',
             'comment',
             'tag',
+            'head_statement_start',
             'code_statement_start',
             'code_expression_start',
             'html_raw_toggle',

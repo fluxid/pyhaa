@@ -68,6 +68,7 @@ log = logging.getLogger(__name__)
 
 
 class PyhaaSyntaxInfo:
+    # TODO: Make getting error details like lineno easier
     def __init__(self, _eidd, _parser, _overwrite=None, **kwargs):
         if isinstance(_eidd, int):
             eid = _eidd

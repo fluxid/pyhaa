@@ -192,3 +192,25 @@ class TestErrors(PyhaaTestCase):
             ),
         )
 
+    def test_nested_partials(self):
+        self.assertPSE(
+            'SYNTAX_ERROR',
+            parse_string,
+            jl(
+                '`def a():',
+                '  `def b():',
+            )
+        )
+
+    def test_misplaced_head_statement_nested(self):
+        exc = self.assertPSE(
+            'SYNTAX_ERROR',
+            parse_string,
+            jl(
+                '%a',
+                '`inherit lol',
+            )
+        )
+        self.assertEqual(exc.get_value('current_lineno'), 2)
+        self.assertEqual(exc.get_value('current_pos'), 0)
+

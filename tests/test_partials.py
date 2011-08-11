@@ -66,13 +66,3 @@ class TestPartials(PyhaaTestCase):
         self.assertEqual(len(struct.partials['hello']), 4)
         self.assertEqual(len(struct.partials['lol']), 1)
 
-    def test_error_nested_partial(self):
-        self.assertPSE(
-            'SYNTAX_ERROR',
-            parse_string,
-            jl(
-                '`def a():',
-                '  `def b():',
-            )
-        )
-

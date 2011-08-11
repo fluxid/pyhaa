@@ -101,6 +101,7 @@ class PyhaaParser(Parser):
         super().token_match(token, match)
 
         if not self.body_started and self.indent == 0 and token in BODY_STARTING:
+            log.debug('Body started on token %s at line %d', token, self.current_lineno)
             self.body_started = True
 
         func = getattr(self, 'handle_' + token, None)
@@ -229,6 +230,13 @@ class PyhaaParser(Parser):
 
 
     # HEAD stuff
+    def handle_head_statement_start(self, match):
+        if self.indent != 0 or self.body_started:
+            raise PyhaaSyntaxError(
+                SYNTAX_INFO.SYNTAX_ERROR,
+                self,
+            )
+
     def handle_head_inherit_expression(self, match):
         self.structure.inheritance.append(match)
 
