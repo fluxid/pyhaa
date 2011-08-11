@@ -66,3 +66,33 @@ class TestPartials(PyhaaTestCase):
         self.assertEqual(len(struct.partials['hello']), 4)
         self.assertEqual(len(struct.partials['lol']), 1)
 
+    def test_optional_colon(self):
+        # Should pass, we're declaring empty partial
+        parse_string(jl(
+            '`def prototype()',
+            '',
+            '%',
+        ))
+
+        # Should pass (catch exception) as there is colon
+        self.assertPSE(
+            'EXPECTED_INDENT',
+            parse_string,
+            jl(
+                '`def incomplete():',
+                '',
+                '%',
+            ),
+        )
+
+        # Should pass (catch exception) as there is no colon and we define something inside
+        self.assertPSE(
+            'UNEXPECTED_INDENT',
+            parse_string,
+            jl(
+                '`def incomplete()',
+                '  %',
+                '%',
+            ),
+        )
+

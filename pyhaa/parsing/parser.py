@@ -35,6 +35,8 @@ from ..utils.encode import entity_decode
 
 log = logging.getLogger(__name__)
 
+INDENT_EXPECTED = 1
+INDENT_NOTEXPECTED = 2
 
 BODY_STARTING = (
     'escape', # \
@@ -188,16 +190,7 @@ class PyhaaParser(Parser):
 
         log.debug('Matched indent difference %d at line %d (current: %d)', eindent, self.current_lineno, self.indent)
 
-        expected_indent = self.get_info('expected_indent', False)
-        if eindent == 0:
-            self.indent_re()
-        elif eindent < 0:
-            self.indent_de(-eindent)
-        elif eindent == 1:
-            self.indent_in()
-            # Expectation of indent is satisfied so we don't expect it anymore
-            expected_indent = False
-        else:
+        if eindent > 1:
             # Wrong! We can indent only one level at a time!
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.TOO_DEEP_INDENT,
@@ -206,12 +199,26 @@ class PyhaaParser(Parser):
                 new_indent = self.indent + eindent,
             )
 
+        # Indent expectance
+        indent_expectance = self.get_info('indent_expectance', None)
         # On reindent or dedent
-        if expected_indent:
+        if eindent < 1 and indent_expectance == INDENT_EXPECTED:
             raise PyhaaSyntaxError(
                 SYNTAX_INFO.EXPECTED_INDENT,
                 self,
             )
+
+        if eindent == 1:
+            if indent_expectance == INDENT_NOTEXPECTED or not isinstance(self.structure.current, (structure.PyhaaParentNode, structure.PyhaaPartial)):
+                raise PyhaaSyntaxError(
+                    SYNTAX_INFO.UNEXPECTED_INDENT,
+                    self,
+                )
+            self.indent_in()
+        elif eindent == 0:
+            self.indent_re()
+        else:
+            self.indent_de(-eindent)
 
     def begin_tag(self):
         self.creating_tag = True
@@ -225,7 +232,7 @@ class PyhaaParser(Parser):
         self.end_tag()
 
     def handle_line_end(self, match):
-        self.continue_info('expected_indent')
+        self.continue_info('indent_expectance')
         self.end_tag()
 
 
@@ -247,8 +254,10 @@ class PyhaaParser(Parser):
         name = self.get_info('partial_name', None)
         self.structure.open_partial(name, match)
         self.current_opened += 1
-        self.set_info('expected_indent', True)
 
+    def handle_head_partial_right_paren(self, match):
+        match = match.group(0)
+        self.set_info('indent_expectance', INDENT_EXPECTED if match.endswith(':') else INDENT_NOTEXPECTED)
 
     # SMALL stuff
     def handle_text(self, match):
@@ -379,7 +388,7 @@ class PyhaaParser(Parser):
         else:
             complete = statement + ':'
         self.append(structure.CompoundStatement(name = statement, content = complete))
-        self.set_info('expected_indent', True)
+        self.set_info('indent_expectance', INDENT_EXPECTED)
 
     def handle_code_statement_simple(self, match):
         self.append(structure.SimpleStatement(content = match))
@@ -409,11 +418,6 @@ class PyhaaParser(Parser):
         '''
         Indented line
         '''
-        if not isinstance(self.structure.current, (structure.PyhaaParentNode, structure.PyhaaPartial)):
-            raise PyhaaSyntaxError(
-                SYNTAX_INFO.UNEXPECTED_INDENT,
-                self,
-            )
         self.opened_stack.append(self.current_opened)
         self.current_opened = 0
         self.indent += 1

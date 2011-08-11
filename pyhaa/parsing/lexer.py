@@ -114,7 +114,7 @@ pyhaa_lexer = dict(
         after = 'head_partial_right_paren',
     ),
     head_partial_right_paren = dict(
-        match = MS('):'),
+        match = MRE('\):?'),
         after = 'line_end',
     ),
 
