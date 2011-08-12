@@ -23,9 +23,12 @@ Testing partial stuff...
 # <http://www.gnu.org/licenses/>.
 
 from pyhaa import (
+    html_render_to_string,
     parse_string,
+    PyhaaEnvironment,
     structure,
 )
+from pyhaa.runtime.loaders import FilesystemLoader
 
 from .helpers import jl, PyhaaTestCase
 
@@ -95,4 +98,23 @@ class TestPartials(PyhaaTestCase):
                 '%',
             ),
         )
+
+    def test_runtime(self):
+        loader = FilesystemLoader(paths='./tests/files/partials', input_encoding = 'utf-8')
+        environment = PyhaaEnvironment(loader = loader)
+
+        def render(path):
+            template = environment.get_template(path)
+            return html_render_to_string(template)
+
+        self.assertEqual(
+            render('base.pha'),
+            '<html><head><title>Web page</title></head><body></body></html>',
+        )
+
+        self.assertEqual(
+            render('page.pha'),
+            '<html><head><title>Subpage - Web page</title></head><body><h1>Hello</h1></body></html>',
+        )
+
 

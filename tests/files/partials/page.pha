@@ -1,0 +1,8 @@
+`inherit 'base.pha'
+
+`def title():
+  -return 'Subpage'
+
+`def body():
+  %h1
+    Hello

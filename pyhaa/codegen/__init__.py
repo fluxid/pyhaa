@@ -158,11 +158,26 @@ class CodeGen:
     def close_template_function(self):
         self.dedent(2)
 
-    def write_root_node(self, node):
+    def write_root_node_function(self, node, empty_iter=False):
+        if len(node) == 0 and not empty_iter:
+            # Don't write anything
+            return
+
+        self.node_open(node)
+        if len(node) == 0 and empty_iter:
+            self.write_io(
+                'if False: yield',
+            )
+        else:
+            self.write_root_node_contents(node, empty_iter)
+        self.node_close(node)
+
+    def write_root_node_contents(self, node, empty_iter=False):
         # In this case as "root node" we mean node which is the topmost parent
+
         iter_stack = list()
         node_stack = list()
-        current_iter = utils.one_iter(node)
+        current_iter = iter(node)
 
         while True:
             node = next(current_iter, None)
@@ -188,8 +203,13 @@ class CodeGen:
         # TODO Write template "globals" here
         self.write_class()
         self.write_inheritance()
-        # TODO Write partial stuff here
-        self.write_root_node(self.structure.tree)
+
+        # Partials
+        for partial in self.structure.partials.values():
+            self.write_root_node_function(partial, True)
+
+        # Body
+        self.write_root_node_function(self.structure.tree)
 
     def write(self):
         self.write_file_header()
@@ -221,6 +241,12 @@ class CodeGen:
         self.open_template_function('__call__', '*arguments, **keywords')
 
     def handle_close_pyhaa_tree(self, node):
+        self.close_template_function()
+
+    def handle_open_pyhaa_partial(self, node):
+        self.open_template_function(node.name, node.arguments)
+
+    def handle_close_pyhaa_partial(self, node):
         self.close_template_function()
 
     def handle_open_simple_statement(self, node):

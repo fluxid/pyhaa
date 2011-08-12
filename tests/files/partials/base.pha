@@ -1,0 +1,15 @@
+`def title():
+  -return ''
+
+`def body()
+
+%html
+  %head
+    %title
+      -title = self.title()
+      -if title:
+        =title
+        =' - '
+      Web page
+  %body
+    =self.body()
