@@ -47,6 +47,7 @@ TODO
 
 Things I left behind for later, not those "yet to be touched".
 
+1. Give up on making template class. Just make simple structure with dict containing partials
 1. Clean up API, make it more flexible and less messy
 1. Raise proper exceptions (move parsing.errors up one level and refactor)
 1. Think of optimizations and code reorganization for get_inheritance_chain
