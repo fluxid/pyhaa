@@ -50,7 +50,6 @@ class NamespaceLookup:
         partial = self._ph_template.get_partial(name)
         if partial:
             result = BoundPartial(self._ph_instance, self._ph_parent, name, partial)
-            #import pdb; pdb.set_trace()
             return result
         if self._ph_parent:
             return getattr(self._ph_parent, name)
@@ -86,7 +85,6 @@ class InstanceProxy(NamespaceLookup):
         for parent_template in iiter:
             last_one._ph_parent = parent = ParentProxy(self, parent_template)
             last_one = parent 
-        #import pdb; pdb.set_trace()
 
 
     def __repr__(self):

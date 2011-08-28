@@ -62,7 +62,6 @@ class BaseLoader:
 
     def get_bytecode(self, path, environment):
         result, filename, token = self.get_python_code(path, environment)
-        #import pdb; pdb.set_trace()
         bytecode = compile(result, filename, 'exec')
         return bytecode, token
 

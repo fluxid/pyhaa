@@ -160,7 +160,6 @@ class TestBasicTags(PyhaaTestCase):
         ))
         # Let's be sure
         self.assertIs(structure.current, structure.tree)
-        #import pdb; pdb.set_trace()
         # Root is parent of two children
         self.assertEqual(len(structure.tree), 2)
         # Let's get straight to children

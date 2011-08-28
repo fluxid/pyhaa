@@ -82,7 +82,6 @@ class HTMLCodeGen(CodeGen):
             del self.simple_bytes[::]
 
     def write_io(self, *args, flush_simple_bytes = True, **kwargs):
-        #import pdb; pdb.set_trace()
         if flush_simple_bytes:
             log.debug('Flushing simple bytes')
             self.flush_simple_bytes()
