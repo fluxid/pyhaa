@@ -24,22 +24,12 @@ from ..utils.cgrt_common import (
     prepare_for_tag,
 )
 
-from . import Template
+def _ph_open_tag(tag_name_stack, name, id_, classes, attributes, self_close):
+    name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, self.encoding)
+    if not self_close:
+        tag_name_stack.append(name)
+    return open_tag(name, attributes, self_close)
 
-
-class HTMLTemplate(Template):
-    encoding = 'utf-8'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.tag_name_stack = list()
-
-    def _ph_open_tag(self, name, id_, classes, attributes, self_close):
-        name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, self.encoding)
-        if not self_close:
-            self.tag_name_stack.append(name)
-        return open_tag(name, attributes, self_close)
-
-    def _ph_close_tag(self):
-        return close_tag(self.tag_name_stack.pop())
+def _ph_close_tag(tag_name_stack):
+    return close_tag(tag_name_stack.pop())
 

@@ -33,9 +33,8 @@ from . import CodeGen
 log = logging.getLogger(__name__)
 
 class HTMLCodeGen(CodeGen):
-    superclass_name = 'HTMLTemplate'
     imports = CodeGen.imports + (
-        'from pyhaa.runtime.html import HTMLTemplate',
+        'from pyhaa.runtime.html import _ph_open_tag, _ph_close_tag',
     )
     void_tags = set((
         'area',
@@ -83,6 +82,7 @@ class HTMLCodeGen(CodeGen):
             del self.simple_bytes[::]
 
     def write_io(self, *args, flush_simple_bytes = True, **kwargs):
+        #import pdb; pdb.set_trace()
         if flush_simple_bytes:
             log.debug('Flushing simple bytes')
             self.flush_simple_bytes()
@@ -103,6 +103,13 @@ class HTMLCodeGen(CodeGen):
 
     def tag_is_static(self, node):
         return not node.attributes_set or len(node.attributes_set) == 1 and not isinstance(node.attributes_set[0], str)
+
+    def open_template_function(self, *args, **kwargs):
+        super(HTMLCodeGen, self).open_template_function(*args, **kwargs)
+        self.write_io(
+            # Holy shit, i don't like this...
+            '_ph_tag_name_stack = []',
+        )
 
     def open_tag(self, name, id_, classes, attributes, self_close):
         name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, self.encoding)
@@ -136,7 +143,7 @@ class HTMLCodeGen(CodeGen):
             )
         else:
             self.write_io(
-                'yield self._ph_open_tag({}, {}, {}, {}, {})'.format(
+                'yield _ph_open_tag(_ph_tag_name_stack, {}, {}, {}, {}, {})'.format(
                     self.byterepr(node.name),
                     self.byterepr(node.id_),
                     self.byterepr(node.classes or None),
@@ -160,7 +167,7 @@ class HTMLCodeGen(CodeGen):
             self.close_tag()
         else:
             self.write_io(
-                'yield self._ph_close_tag()',
+                'yield _ph_close_tag(_ph_tag_name_stack)',
             )
 
     def handle_open_text(self, node):

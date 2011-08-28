@@ -22,6 +22,7 @@ import io
 import posixpath
 
 from .utils import sequence_flatten
+from .runtime.proxy import InstanceProxy
 
 __all__ = (
     'PyhaaEnvironment',
@@ -50,7 +51,7 @@ class PyhaaEnvironment:
         self.output_encoding = output_encoding
         self.auto_reload = auto_reload
 
-    def get_template_class(self, path, current_path=None):
+    def get_template_info(self, path, current_path=None):
         if current_path and not path.startswith('/'):
             path = posixpath.join(current_path, path)
 
@@ -62,14 +63,14 @@ class PyhaaEnvironment:
             # TODO Raise proper exception
             raise Exception
 
-        return self.loader.get_template_class(path, self)
+        return self.loader.get_template_info(path, self)
 
-    def get_inheritance_chain(self, template_class):
+    def get_inheritance_chain(self, template_info):
         '''
         Returns "teplate precedence list"
         Inheritance linearization works as in C3 algorithm, used in Python itself.
         '''
-        classes = dict()
+        templates = dict()
         onpath = set()
 
         def in_tail(what, where, whence):
@@ -122,53 +123,48 @@ class PyhaaEnvironment:
                 return
             raise Exception('Failed to resolve inheritance precedence')
 
-        def load_inheritance(class_):
-            inheritance = [class_]
-            parents = classes[class_]
+        def load_inheritance(template_info):
+            inheritance = [template_info]
+            parents = templates[template_info]
             if not parents:
                 return inheritance
             loaded = [
-                load_inheritance(pclass)
-                for pclass in parents
+                load_inheritance(pinfo)
+                for pinfo in parents
             ]
             loaded.append(parents)
             inheritance.extend(merge_inheritance(loaded))
             return inheritance
 
-        def load_classes(class_):
-            onpath.add(class_)
+        def load_template_infos(template_info):
+            onpath.add(template_info)
             parents = []
-            for ppath in sequence_flatten(class_.get_inheritance()):
+            for ppath in sequence_flatten(template_info.inheritance()):
                 # TODO Include current path!!!
-                parent_class = self.get_template_class(ppath) # , current_path = class_.path) or smth
+                parent = self.get_template_info(ppath) # , current_path = template_info['path']) or smth
 
-                if parent_class in onpath:
+                if parent in onpath:
                     raise Exception('Loop detected in inheritance tree!')
 
-                if parent_class not in classes:
-                    load_classes(parent_class)
+                if parent not in templates:
+                    load_template_infos(parent)
 
-                parents.append(parent_class)
-            classes[class_] = parents
-            onpath.remove(class_)
+                parents.append(parent)
+            templates[template_info] = parents
+            onpath.remove(template_info)
 
-        # Load all classes in inheritance tree
-        load_classes(template_class)
-        return load_inheritance(template_class)
+        # Load all templates in inheritance tree
+        load_template_infos(template_info)
+        return load_inheritance(template_info)
 
     def get_template(self, path, current_path=None):
         '''
         Returns template instance along with complete parent chain
         '''
-        template_class = self.get_template_class(path, current_path)
-        linearized = self.get_inheritance_chain(template_class)
-        linearized.reverse()
-
-        template = None
-        for class_ in linearized:
-            template = class_(self, parent=template)
-
-        return template
+        template_info = self.get_template_info(path, current_path)
+        linearized = self.get_inheritance_chain(template_info)
+        print(linearized)
+        return InstanceProxy(linearized, self)
 
     def parse_readline(self, readline):
         parser = self.parser_class()
@@ -205,8 +201,8 @@ class PyhaaEnvironment:
         cg.write()
         return bio.getvalue()
 
-    def template_class_from_bytecode(self, bytecode):
+    def template_info_from_bytecode(self, bytecode):
         dict_ = dict()
         exec(bytecode, dict_, dict_)
-        return dict_[dict_['template_class_name']]
+        return dict_['_ph_template_info']
 

@@ -29,7 +29,7 @@ class BaseLoader:
         self.template_cache = LFUCache(template_cache_size)
         self.bytecode_cache = bytecode_cache
 
-    def get_template_class(self, path, environment):
+    def get_template_info(self, path, environment):
         template = self.template_cache.get(path)
         expired = None
         if template:
@@ -55,20 +55,21 @@ class BaseLoader:
             if self.bytecode_cache:
                 self.bytecode_cache.store(path, bytecode, token) 
 
-        template = environment.template_class_from_bytecode(bytecode)
+        template = environment.template_info_from_bytecode(bytecode)
         self.template_cache.store(path, (template, token))
 
         return template
 
     def get_bytecode(self, path, environment):
         result, filename, token = self.get_python_code(path, environment)
+        #import pdb; pdb.set_trace()
         bytecode = compile(result, filename, 'exec')
         return bytecode, token
 
     def get_python_code(self, path, environment):
         result, filename, token = self.get_source_code(path, environment)
         structure = environment.parse_any(result)
-        code = environment.codegen_structure(structure)
+        code = environment.codegen_structure(structure, template_path = path)
         return code, filename, token
     
     def get_source_code(self, path, environment):

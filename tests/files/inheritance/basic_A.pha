@@ -1,4 +1,4 @@
 `inherit 'basic_B.pha'
 A
 !sp
-=self.parent()
+=parent()

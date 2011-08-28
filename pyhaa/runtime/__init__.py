@@ -22,11 +22,6 @@ from contextlib import contextmanager
 #from copy import copy
 from sys import exc_info
 
-class Template:
-    def __init__(self, environment, parent = None):
-        self.environment = environment
-        self.parent = parent
-
 class EncapsulatedException(Exception):
     '''
     This Exceptions "encapsulates" other exception so it won't be matched
@@ -78,4 +73,27 @@ class decapsulate_exceptions:
         if exc_type and issubclass(exc_type, EncapsulatedException):
             raise exc_val.original
         return False
+
+class TemplateInfo:
+    def __init__(self, encoding, template_name, template_path=None, inheritance=None):
+        self.encoding = encoding
+        self.template_name = template_name
+        self.template_path = inheritance
+        self.inheritance = inheritance
+        self.partials = dict()
+
+    def register_partial(self, f):
+        self.partials[f.__name__] = f
+
+    def get_partial(self, name):
+        return self.partials.get(name)
+
+    def __hash__(self):
+        return hash(self.template_name)
+
+    def __repr__(self):
+        return '<{} {}>'.format(
+            self.__class__.__name__,
+            repr(self.template_name),
+        )
 

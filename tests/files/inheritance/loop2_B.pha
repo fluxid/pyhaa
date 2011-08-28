@@ -1,4 +1,4 @@
 `inherit 'loop_C.pha'
 B
 !sp
-=self.parent()
+=parent()

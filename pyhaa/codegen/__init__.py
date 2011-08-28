@@ -30,7 +30,6 @@ from .. import (
 DEFAULT_INDENT_STRING = '    '
 DEFAULT_NEWLINE = '\n'
 DEFAULT_ENCODING = 'utf-8'
-DEFAULT_TEMPLATE_NAME = 'this_template'
 
 log = logging.getLogger(__name__)
 
@@ -44,25 +43,27 @@ def or_if_none(value, replacement):
     return value
 
 class CodeGen:
-    superclass_name = ''
     imports = (
         'from pyhaa.utils.encode import single_encode as _ph_single_encode',
-        'from pyhaa.runtime import encapsulate_exceptions as _ph_encapsulate_exceptions',
+        'from pyhaa.runtime import encapsulate_exceptions as _ph_encapsulate_exceptions, TemplateInfo as _ph_TemplateInfo',
     )
 
     def __init__(self, structure, io, **kwargs):
         indent_string = or_if_none(kwargs.get('indent_string'), DEFAULT_INDENT_STRING)
         newline = or_if_none(kwargs.get('newline'), DEFAULT_NEWLINE)
         encoding = or_if_none(kwargs.get('encoding'), DEFAULT_ENCODING)
-        template_name = or_if_none(kwargs.get('template_name'), DEFAULT_TEMPLATE_NAME)
+
+        template_path = kwargs.get('template_path')
+        template_name = template_path or '!template_{}'.format(id(structure))
+
 
         self.structure = structure
         self.io = io
         self.indent_string = indent_string.encode(encoding)
         self.newline = newline.encode(encoding)
         self.encoding = encoding
+        self.template_path = template_path
         self.template_name = template_name
-        self.class_name = utils.camel(template_name)
 
         # What to autoclose in case of return, break or continue statements
         # For returns
@@ -72,6 +73,7 @@ class CodeGen:
         # Whether we're in the process of autoclosing nodes
         self.autoclosing_now = False
 
+        self.written_partials = set()
         self.indent_level = 0
         self.ignore_code_level = 0
 
@@ -93,48 +95,30 @@ class CodeGen:
             if self.indent_level < self.ignore_code_level:
                 self.ignore_code_level = 0
 
+        if len(args) == 1 and hasattr(args[0], '__next__'):
+            args, = args
         for arg in args:
-            if self.indent_level:
+            if indent_level:
                 self.io.write(indent_level * self.indent_string)
             self.io.write(arg.encode(self.encoding))
             self.io.write(self.newline)
-    
+
     def write_file_header(self):
         self.write_io(
             '# -*- coding: {} -*-'.format(self.encoding),
         )
 
-    def write_class(self):
-        self.write_io(
-            'template_class_name = ' + repr(self.class_name),
-            'class {}({}):'.format(
-                self.class_name,
-                self.superclass_name,
-            ),
-        )
-        self.indent()
-        self.write_io(
-            'encoding = {}'.format(repr(self.encoding)),
-            '',
-        )
-
     def write_inheritance(self):
         self.write_io(
-            '@staticmethod',
-            'def get_inheritance():'
-        )
-        self.indent()
-        self.write_io(
-            'return ({})'.format(' '.join((
+            'inheritance = lambda: ({}),'.format(' '.join((
                 '({}),'.format(inherits)
                 for inherits in self.structure.inheritance
             ))),
         )
-        self.dedent()
 
     def write_base_imports(self):
         self.write_io(
-            *self.imports
+            iter(self.imports)
         )
 
     def open_template_function(self, name, attributes=None):
@@ -143,7 +127,9 @@ class CodeGen:
             attributes = ', ' + attributes
 
         self.write_io(
-            'def {}(self{}):'.format(
+            # Register template in template_info...
+            '@_ph_template_info.register_partial',
+            'def {}(self, parent{}):'.format(
                 name,
                 attributes,
             ),
@@ -155,8 +141,14 @@ class CodeGen:
         self.autoclose_open_func()
         self.indent()
 
-    def close_template_function(self):
+        self.written_partials.add(name)
+
+    def close_template_function(self, name):
         self.dedent(2)
+        # This gets worse by time...
+        # Remove so it doesn't get into globals so we can't
+        # call it directly
+        self.write_io('del {}'.format(name))
 
     def write_root_node_function(self, node, empty_iter=False):
         if len(node) == 0 and not empty_iter:
@@ -199,11 +191,7 @@ class CodeGen:
             else:
                 self.node_close(node)
 
-    def write_structure(self):
-        # TODO Write template "globals" here
-        self.write_class()
-        self.write_inheritance()
-
+    def write_partials(self):
         # Partials
         for partial in self.structure.partials.values():
             self.write_root_node_function(partial, True)
@@ -211,10 +199,33 @@ class CodeGen:
         # Body
         self.write_root_node_function(self.structure.tree)
 
+    def write_attributes(self):
+        self.write_io(
+            'encoding = {},'.format(repr(self.encoding)),
+            'template_path = {},'.format(repr(self.template_path)),
+            'template_name = {},'.format(repr(self.template_name)),
+        )
+
+    def write_template_info(self):
+        self.write_io(
+            '_ph_template_info = _ph_TemplateInfo(',
+        )
+        self.indent()
+
+        self.write_attributes()
+        self.write_inheritance()
+        #self.write_partials_dict()
+
+        self.dedent()
+        self.write_io(
+            ')',
+        )
+
     def write(self):
         self.write_file_header()
         self.write_base_imports()
-        self.write_structure()
+        self.write_template_info()
+        self.write_partials()
 
     def node_open(self, node):
         self.call_node_handling_function('open', node)
@@ -238,16 +249,16 @@ class CodeGen:
             log.warning("Couldn't find function %s for node %r.", function_name, node)
 
     def handle_open_pyhaa_tree(self, node):
-        self.open_template_function('__call__', '*arguments, **keywords')
+        self.open_template_function('__body__', '*arguments, **keywords')
 
     def handle_close_pyhaa_tree(self, node):
-        self.close_template_function()
+        self.close_template_function('__body__')
 
     def handle_open_pyhaa_partial(self, node):
         self.open_template_function(node.name, node.arguments)
 
     def handle_close_pyhaa_partial(self, node):
-        self.close_template_function()
+        self.close_template_function(node.name)
 
     def handle_open_simple_statement(self, node):
         if node.name == 'return':
