@@ -47,24 +47,20 @@ TODO
 
 Things I left behind for later, not those "yet to be touched".
 
-1. Give up on making template class. Just make simple structure with dict containing partials
 1. Clean up API, make it more flexible and less messy
 1. Raise proper exceptions (move parsing.errors up one level and refactor)
 1. Think of optimizations and code reorganization for get_inheritance_chain
 1. Remove `shorthands` module and make unit-tests use environment
-1. Rethink how to handle Python tokenizer readahead
 1. Better unit-test error handling
 1. Reorganize and clean up code in parser a bit more
-1. Find better way for inserting whitespaces (`!sp` syntax is too a bit ugly)
 1. Make setting tag attributes from variable easier (currently only dict-comprehension is possible)
-1. Think how to support preformatted text blocks blocks (inline javascript, &lt;pre&gt; blocks etc)
 
 What still needs some thought
 -----------------------------
 
-Things I didn't yet start implementing
-
-(None, for now...)
+1. Find better way for inserting whitespaces (`!sp` syntax is too a bit ugly)
+1. Think how to support preformatted text blocks blocks (inline javascript, &lt;pre&gt; blocks etc)
+1. Rethink how to handle Python tokenizer readahead
 
 Copyright and licence
 ---------------------
