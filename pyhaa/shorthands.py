@@ -29,38 +29,10 @@ from .utils import iter_flatten
 # TODO Scrap all of below and enforce usage of environment!
 
 __all__ = (
-    'codegen_template',
-    'compile_template',
     'html_render_to_iterator',
     'html_render_to_string',
-    'parse_io',
-    'parse_readline',
-    'parse_string',
 )
 
-def parse_readline(readline, parser_class=PyhaaParser):
-    parser = parser_class()
-    parser.parse_readline(readline)
-    parser.finish()
-    return parser.structure
-
-def parse_io(fileobj):
-    return parse_readline(fileobj.readline)
-
-def parse_string(string):
-    return parse_io(io.StringIO(string))
-
-def codegen_template(structure, codegen_class = HTMLCodeGen, **kwargs):
-    bio = io.BytesIO()
-    cg = codegen_class(structure, bio, **kwargs)
-    cg.write()
-    return bio.getvalue()
-
-def compile_template(code):
-    dict_ = dict()
-    exec(code, dict_, dict_)
-    template = dict_[dict_['template_class_name']]
-    return template
 
 def html_render_to_iterator(template, function_name=None, args=None, kwargs=None):
     if isinstance(template, type):

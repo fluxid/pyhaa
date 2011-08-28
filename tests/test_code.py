@@ -22,7 +22,6 @@
 # <http://www.gnu.org/licenses/>.
 
 from pyhaa import (
-    parse_string,
     structure,
 )
 
@@ -30,7 +29,7 @@ from .helpers import jl, PyhaaTestCase
 
 class TestCode(PyhaaTestCase):
     def test_basic_expressions(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%placeholder',
             '=a()',
             '= "b"',
@@ -44,7 +43,7 @@ class TestCode(PyhaaTestCase):
 
     def test_multiline_expressions(self):
         # Testing nasty multiline expressions with bad indenting
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '=c((',
             '      d',
             'for d in e',
@@ -63,7 +62,7 @@ class TestCode(PyhaaTestCase):
         self.assert_(isinstance(code3, structure.Expression))
 
     def test_if_elif_while_statements(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '-if(1): %tag',
             '-elif True:',
             '  %tag',
@@ -88,7 +87,7 @@ class TestCode(PyhaaTestCase):
         self.assertEqual(s3.name, 'while')
 
     def test_else_statements(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '-else \t  : %tag',
             '-else:',
             '  sup!',
@@ -106,7 +105,7 @@ class TestCode(PyhaaTestCase):
         self.assertEqual(s2.name, 'else')
 
     def test_for_statement(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '-for a in range(10): %tag',
             '-for(a)in(range(10)) :',
             '  sup!',
@@ -124,7 +123,7 @@ class TestCode(PyhaaTestCase):
         self.assertEqual(s2.name, 'for')
 
     def test_simple_statement_name(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '-return(1)',
             '-break',
             '-assert False \t ',

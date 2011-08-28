@@ -26,7 +26,6 @@ import io
 
 from pyhaa import (
     codegen,
-    parse_string,
 )
 
 from .helpers import jl, PyhaaTestCase
@@ -42,7 +41,7 @@ class TestingCodeGen(codegen.CodeGen):
 
 class TestCodegen(PyhaaTestCase):
     def test_basic_codegen(self):
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%a',
             '  %b',
             '%c',

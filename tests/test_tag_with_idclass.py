@@ -22,30 +22,26 @@ Testing tags with set class and/or id
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from pyhaa import (
-    parse_string,
-)
-
 from .helpers import jl, PyhaaTestCase
 
 
 class TestTagsWithIdClass(PyhaaTestCase):
     def test_only_class(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '.foo',
         )).tree
         tag, = tree.children
         self.assertSetEqual(tag.classes, {'foo'})
 
     def test_only_id(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '#bar',
         )).tree
         tag, = tree.children
         self.assertEqual(tag.id_, 'bar')
 
     def test_only_name(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%div',
         )).tree
         tag, = tree.children
@@ -54,7 +50,7 @@ class TestTagsWithIdClass(PyhaaTestCase):
         self.assertIs(tag.id_, None)
 
     def test_all_at_once(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%div#head.rainbow.unicorns.autoclear',
         )).tree
         tag, = tree.children
@@ -63,7 +59,7 @@ class TestTagsWithIdClass(PyhaaTestCase):
         self.assertEqual(tag.id_, 'head')
 
     def test_nested(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%ul',
             '  %li spam',
             '  %li eggs',
@@ -80,7 +76,7 @@ class TestTagsWithIdClass(PyhaaTestCase):
 
     def test_even_more_complicated(self):
         # Random structure made for lolz
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%ul#left_menu.socool',
             '  %li#first_one',
             '    %a.bling my pets',
@@ -107,7 +103,7 @@ class TestTagsWithIdClass(PyhaaTestCase):
     def test_child_class(self):
         # Make sure we really called end_tag and 'foo' class wont be assigned
         # to previous tag
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%',
             '  .foo',
         )).tree
@@ -117,7 +113,7 @@ class TestTagsWithIdClass(PyhaaTestCase):
         self.assertSetEqual(tag2.classes, {'foo'})
 
     def test_child_id(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%',
             '  #foo',
         )).tree
@@ -127,7 +123,7 @@ class TestTagsWithIdClass(PyhaaTestCase):
         self.assertEqual(tag2.id_, 'foo')
 
     def test_child_class_inline(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '% .foo',
         )).tree
         tag1, = tree.children
@@ -136,7 +132,7 @@ class TestTagsWithIdClass(PyhaaTestCase):
         self.assertSetEqual(tag2.classes, {'foo'})
 
     def test_child_id_inline(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '% #foo',
         )).tree
         tag1, = tree.children

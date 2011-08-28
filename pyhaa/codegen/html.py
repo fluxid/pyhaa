@@ -143,7 +143,7 @@ class HTMLCodeGen(CodeGen):
             )
         else:
             self.write_io(
-                'yield _ph_open_tag(_ph_tag_name_stack, {}, {}, {}, {}, {})'.format(
+                'yield _ph_open_tag(_ph_tag_name_stack, {}, {}, {}, {}, {}, {})'.format(
                     self.byterepr(node.name),
                     self.byterepr(node.id_),
                     self.byterepr(node.classes or None),
@@ -156,6 +156,7 @@ class HTMLCodeGen(CodeGen):
                         for attributes in node.attributes_set
                     ))),
                     self.byterepr(self_close),
+                    repr(self.encoding),
                 ),
             )
 

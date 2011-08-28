@@ -24,7 +24,6 @@ Testing partial stuff...
 
 from pyhaa import (
     html_render_to_string,
-    parse_string,
     PyhaaEnvironment,
     structure,
 )
@@ -34,7 +33,7 @@ from .helpers import jl, PyhaaTestCase
 
 class TestPartials(PyhaaTestCase):
     def test_basic_partial_one(self):
-        struct = parse_string(jl(
+        struct = self.senv.parse_string(jl(
             '`def hello(a, b, c):',
             '  %h1 partial',
             '  =a',
@@ -49,7 +48,7 @@ class TestPartials(PyhaaTestCase):
         self.assertEqual(len(struct.partials['hello']), 4)
 
     def test_basic_partial_two(self):
-        struct = parse_string(jl(
+        struct = self.senv.parse_string(jl(
             '`def hello(a, b, c):',
             '  %h1 partial',
             '  =a',
@@ -71,7 +70,7 @@ class TestPartials(PyhaaTestCase):
 
     def test_optional_colon(self):
         # Should pass, we're declaring empty partial
-        parse_string(jl(
+        self.senv.parse_string(jl(
             '`def prototype()',
             '',
             '%',
@@ -80,7 +79,7 @@ class TestPartials(PyhaaTestCase):
         # Should pass (catch exception) as there is colon
         self.assertPSE(
             'EXPECTED_INDENT',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '`def incomplete():',
                 '',
@@ -91,7 +90,7 @@ class TestPartials(PyhaaTestCase):
         # Should pass (catch exception) as there is no colon and we define something inside
         self.assertPSE(
             'UNEXPECTED_INDENT',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '`def incomplete()',
                 '  %',

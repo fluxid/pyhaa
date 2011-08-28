@@ -18,10 +18,6 @@
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from pyhaa import (
-    parse_string,
-)
-
 from pyhaa.structure import (
     Tag,
     Text,
@@ -31,7 +27,7 @@ from .helpers import jl, PyhaaTestCase
 
 class TestText(PyhaaTestCase):
     def test_text(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             'spam and eggs',
         )).tree
         text1 = tree.children[0]
@@ -39,7 +35,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, 'spam and eggs')
 
     def test_escape(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '\\%i am no tag!',
         )).tree
         text1 = tree.children[0]
@@ -47,7 +43,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, '%i am no tag!')
 
     def test_inline_text(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%some-tag.class#id %child text',
         )).tree
         tmp = tree
@@ -59,7 +55,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, 'text')
 
     def test_inline_escape(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%some-tag.class#id %child \\%text',
         )).tree
         tmp = tree
@@ -71,7 +67,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, '%text')
 
     def test_noninline_text(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%some-tag.class#id',
             '  %child',
             '    text',
@@ -85,7 +81,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, 'text')
 
     def test_noninline_escape(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%some-tag.class#id',
             '  %child',
             '    \\%text',
@@ -99,7 +95,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, '%text')
 
     def test_joining(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             'foo',
             '\%',
             'bar',
@@ -109,7 +105,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, 'foo % bar')
 
     def test_stripped(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '\  \t  foo   \t  ',
             'bar  \t  ',
         )).tree
@@ -118,7 +114,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text1.content, 'foo bar')
 
     def test_escape_toggle(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '&amp;',
             '?&amp;',
             '?&amp;',
@@ -133,7 +129,7 @@ class TestText(PyhaaTestCase):
         self.assertEqual(text3.content, '&')
 
     def test_constant(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '!html5',
             '!sp',
         )).tree
@@ -145,7 +141,7 @@ class TestText(PyhaaTestCase):
 
     def test_comment(self):
         # Best place for this test...
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             'test2',
             ';',
             '; ',

@@ -26,7 +26,6 @@ Check if for given code are raised correct errors
 from warnings import catch_warnings
 
 from pyhaa import (
-    parse_string,
     PyhaaSyntaxWarning,
 )
 
@@ -40,28 +39,28 @@ class TestErrors(PyhaaTestCase):
         '''
         self.assertPSE(
             'SYNTAX_ERROR',
-            parse_string,
+            self.senv.parse_string,
             '%}',
         )
 
     def test_classname(self):
         self.assertPSE(
             'EXPECTED_CLASSNAME',
-            parse_string,
+            self.senv.parse_string,
             '. text',
         )
 
     def test_idname(self):
         self.assertPSE(
             'EXPECTED_IDNAME',
-            parse_string,
+            self.senv.parse_string,
             '# text',
         )
 
     def test_tab_width_1(self):
         exc = self.assertPSE(
             'INCONSISTENT_TAB_WIDTH',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '%',
                 '\t%',
@@ -74,7 +73,7 @@ class TestErrors(PyhaaTestCase):
     def test_tab_width_2(self):
         exc = self.assertPSE(
             'INCONSISTENT_TAB_WIDTH',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '%',
                 '\t%',
@@ -87,7 +86,7 @@ class TestErrors(PyhaaTestCase):
     def test_too_deep_indent(self):
         exc = self.assertPSE(
             'TOO_DEEP_INDENT',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '%',
                 ' %',
@@ -101,7 +100,7 @@ class TestErrors(PyhaaTestCase):
         with catch_warnings(record=True) as warns:
             exc = self.assertPSE(
                 'INVALID_INDENT',
-                parse_string,
+            self.senv.parse_string,
                 jl(
                     '%',
                     '\t%',
@@ -119,7 +118,7 @@ class TestErrors(PyhaaTestCase):
     def test_invalid_indent_2(self):
         self.assertPSE(
             'INVALID_INDENT',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '%',
                 '\t%',
@@ -131,14 +130,14 @@ class TestErrors(PyhaaTestCase):
     def test_unexpected_indent_1(self):
         self.assertPSE(
             'UNEXPECTED_INDENT',
-            parse_string,
+            self.senv.parse_string,
             '\t%',
         )
 
     def test_unexpected_indent_2(self):
         self.assertPSE(
             'UNEXPECTED_INDENT',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '%',
                 '\ttext',
@@ -149,35 +148,35 @@ class TestErrors(PyhaaTestCase):
     def test_unbalanced_brackets(self):
         self.assertPSE(
             'UNBALANCED_BRACKETS',
-            parse_string,
+            self.senv.parse_string,
             '%{)}',
         )
 
     def test_syntax_error(self):
         self.assertPSE(
             'PYTHON_SYNTAX_ERROR',
-            parse_string,
+            self.senv.parse_string,
             '%{;}',
         )
 
     def test_invalid_python_attributes(self):
         self.assertPSE(
             'INVALID_PYTHON_ATTRIBUTES',
-            parse_string,
+            self.senv.parse_string,
             '%{1}',
         )
 
     def test_id_already_set(self):
         self.assertPSE(
             'ID_ALREADY_SET',
-            parse_string,
+            self.senv.parse_string,
             '#s#d',
         )
 
     def test_expected_indent(self):
         self.assertPSE(
             'EXPECTED_INDENT',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '-if 0:',
                 'nope!',
@@ -185,7 +184,7 @@ class TestErrors(PyhaaTestCase):
         )
         self.assertPSE(
             'EXPECTED_INDENT',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '-else:',
                 'nope!',
@@ -195,7 +194,7 @@ class TestErrors(PyhaaTestCase):
     def test_nested_partials(self):
         self.assertPSE(
             'SYNTAX_ERROR',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '`def a():',
                 '  `def b():',
@@ -205,7 +204,7 @@ class TestErrors(PyhaaTestCase):
     def test_misplaced_head_statement_nested(self):
         exc = self.assertPSE(
             'SYNTAX_ERROR',
-            parse_string,
+            self.senv.parse_string,
             jl(
                 '%a',
                 '`inherit lol',

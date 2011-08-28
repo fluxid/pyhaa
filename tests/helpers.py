@@ -22,6 +22,7 @@ import logging
 from unittest import TestCase
 
 from pyhaa import (
+    PyhaaEnvironment,
     PyhaaSyntaxError,
     SYNTAX_INFO,
 )
@@ -39,6 +40,9 @@ class PyhaaTestCase(TestCase):
     '''
     Extended TestCase for internal use
     '''
+
+    def setUp(self):
+        self.senv = PyhaaEnvironment()
 
     def assertPSE(self, _eid, _func, *args, **kwargs):
         '''

@@ -22,15 +22,11 @@ Testing basic tag structures and pyhaa tree structure in general
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from pyhaa import (
-    parse_string,
-)
-
 from .helpers import jl, PyhaaTestCase
 
 class TestBasicTags(PyhaaTestCase):
     def test_one_tag(self):
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%',
         ))
         # All tags are closed
@@ -48,7 +44,7 @@ class TestBasicTags(PyhaaTestCase):
         self.assertEqual(len(child.children), 0)
 
     def test_two_tags(self):
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%',
             '%',
         ))
@@ -67,7 +63,7 @@ class TestBasicTags(PyhaaTestCase):
         self.assertEqual(len(child1.children), 0)
 
     def test_one_child(self):
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%',
             '\t%',
         ))
@@ -90,7 +86,7 @@ class TestBasicTags(PyhaaTestCase):
         self.assertIs(subchild1.root, structure.tree)
 
     def test_one_child_and_sibling(self):
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%',
             '\t%',
             '%',
@@ -113,7 +109,7 @@ class TestBasicTags(PyhaaTestCase):
 
     def test_one_child_and_sibling_inline(self):
         # Same as in test_one_child_and_sibling, but we use inline notation
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '% %',
             '%',
         ))
@@ -135,7 +131,7 @@ class TestBasicTags(PyhaaTestCase):
 
     def test_three_levels(self):
         # Let's use two spaces intead of tabs this time...
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%',
             '  %',
             '    %',
@@ -156,7 +152,7 @@ class TestBasicTags(PyhaaTestCase):
         self.assertIs(tag3.root, structure.tree)
 
     def test_children_of_inline(self):
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%a %b', # tag1 tag2
             '  %c', # tag3
             '  %d', # tag4
@@ -192,7 +188,7 @@ class TestBasicTags(PyhaaTestCase):
         Test deep structures, as I'm not 100% sure
         if dedent and node closing works correctly.
         '''
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '% % %', # 1 3 4
             '  % %', # 5 7
             '    % % %', # 8 9 10

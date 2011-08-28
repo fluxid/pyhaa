@@ -54,7 +54,7 @@ class CodeGen:
         encoding = or_if_none(kwargs.get('encoding'), DEFAULT_ENCODING)
 
         template_path = kwargs.get('template_path')
-        template_name = template_path or '!template_{}'.format(id(structure))
+        template_name = kwargs.get('template_name') or template_path or '!template_{}'.format(id(structure))
 
 
         self.structure = structure

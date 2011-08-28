@@ -23,29 +23,23 @@ Test HTML code generation
 # <http://www.gnu.org/licenses/>.
 
 import io
-from unittest import TestCase
 
 from pyhaa import (
-    codegen_template,
-    compile_template,
     html_render_to_string,
-    parse_string,
 )
 
-from .helpers import jl
+from .helpers import jl, PyhaaTestCase
 
 
-class TestCodegenHtml(TestCase):
+class TestCodegenHtml(PyhaaTestCase):
     def test_basic_codegen(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '%p',
             '  %a Text',
             '%input(checked)',
             '%div',
-        ))
-        code = codegen_template(structure, template_name = 'basic_template')
-        template = compile_template(code)
-        self.assertEqual(template.__name__, 'BasicTemplate')
+        ), template_name = 'basic_template')
+        self.assertEqual(template.template_name, 'basic_template')
         rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
@@ -53,17 +47,15 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_void_tags(self):
-        structure = parse_string(jl(
+        structure = self.senv.parse_string(jl(
             '%br Text',
         ))
-        self.assertRaises(Exception, codegen_template, structure)
+        self.assertRaises(Exception, self.senv.codegen_structure, structure)
 
     def test_dynamic_tags(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '%p.a.b{"class": arguments[0], "_tag_name": arguments[1]}',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         rendered = html_render_to_string(template, args=('c', 'div'))
         self.assertEqual(
             rendered,
@@ -71,14 +63,12 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_html_encode_toggle_and_text(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '&',
             '?&',
             '?&amp;',
             '&amp;',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
@@ -86,11 +76,9 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_template_charset(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             'Zażółć gęślą jaźń',
-        ))
-        code = codegen_template(structure, encoding='iso-8859-2')
-        template = compile_template(code)
+        ), encoding='iso-8859-2')
         rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
@@ -98,12 +86,10 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_expressions(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '=arguments[0]',
             '?=arguments[1]',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         rendered = html_render_to_string(template, args=('&', '&amp;'))
         self.assertEqual(
             rendered,
@@ -111,7 +97,7 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_while_if(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '-my_iter = iter(arguments)',
             '%ul',
             '  -while True:',
@@ -120,8 +106,6 @@ class TestCodegenHtml(TestCase):
             '      -break',
             '    %li =value',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         rendered = html_render_to_string(template, args=('1', '2', '3'))
         self.assertEqual(
             rendered,
@@ -129,13 +113,11 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_for(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '%ul',
             '  -for value in arguments:',
             '    %li =value',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         rendered = html_render_to_string(template, args=('1', '2', '3'))
         self.assertEqual(
             rendered,
@@ -143,11 +125,9 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_for_inline(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '%ul -for value in arguments: %li =value',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         rendered = html_render_to_string(template, args=('1', '2', '3'))
         self.assertEqual(
             rendered,
@@ -155,7 +135,7 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_autoclose1(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '%a',
             '  -while True:',
             '    %b',
@@ -172,8 +152,6 @@ class TestCodegenHtml(TestCase):
             '      %h',
             '  -return',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         rendered = html_render_to_string(template)
         self.assertEqual(
             rendered,
@@ -185,7 +163,7 @@ class TestCodegenHtml(TestCase):
         )
 
     def test_autoclose2(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '-cont = True',
             '-context, = arguments',
             '=str(context)',
@@ -209,8 +187,6 @@ class TestCodegenHtml(TestCase):
             '    -cont=False',
             '  -if context == 12: -return',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         for i in range(13):
             rendered = html_render_to_string(template, args=(i,))
             self.assertEqual(
@@ -219,21 +195,17 @@ class TestCodegenHtml(TestCase):
             )
 
     def test_exception_encapsulation1(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '-a = iter(range(3))',
             '-while True:',
             '  =str(next(a))',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         self.assertRaises(StopIteration, html_render_to_string, template)
 
     def test_exception_encapsulation2(self):
-        structure = parse_string(jl(
+        template = self.senv.get_template_from_string(jl(
             '-raise ValueError("hello")',
         ))
-        code = codegen_template(structure)
-        template = compile_template(code)
         try:
             html_render_to_string(template)
         except ValueError as exc:

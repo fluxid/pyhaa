@@ -105,7 +105,7 @@ class PyhaaEnvironment:
                             break
                     if found_tail:
                         continue
-                    
+
                     # yield it to line
                     yield head
 
@@ -163,8 +163,14 @@ class PyhaaEnvironment:
         '''
         template_info = self.get_template_info(path, current_path)
         linearized = self.get_inheritance_chain(template_info)
-        print(linearized)
         return InstanceProxy(linearized, self)
+
+    def get_template_from_string(self, string, **kwargs):
+        structure = self.parse_string(string)
+        code = self.codegen_structure(structure, **kwargs)
+        bytecode = compile(code, '<string>', 'exec')
+        template_info = self.template_info_from_bytecode(bytecode)
+        return InstanceProxy([template_info], self)
 
     def parse_readline(self, readline):
         parser = self.parser_class()

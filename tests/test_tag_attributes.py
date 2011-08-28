@@ -22,9 +22,6 @@ Testing basic tag structures and pyhaa tree structure in general
 # along with this library in the file COPYING.LESSER. If not, see
 # <http://www.gnu.org/licenses/>.
 
-from pyhaa import (
-    parse_string,
-)
 from pyhaa.utils.cgrt_common import (
     prepare_for_tag as pft,
 )
@@ -33,7 +30,7 @@ from .helpers import jl, PyhaaTestCase
 
 class TestTagAttributes(PyhaaTestCase):
     def test_empty_attributes(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%',
             '%(){}()',
             '%( \t     ){  \t  }',
@@ -45,7 +42,7 @@ class TestTagAttributes(PyhaaTestCase):
 
     def test_attributes_names(self):
         # Dirty style but still valid
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%(foo \t bar)',
             '%( \t baz\t \t)',
         )).tree
@@ -61,7 +58,7 @@ class TestTagAttributes(PyhaaTestCase):
     def test_attributes_mixed(self):
         # Even dirtier
         # Note that there is %(...)(...)
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%( foo_bar-baz \t = \'lol\' \t)( spam = eggs i_feel-great- \t lmao=" rofl\t\'")',
         )).tree
         tag, = tree.children
@@ -73,7 +70,7 @@ class TestTagAttributes(PyhaaTestCase):
         })
 
     def test_attributes_multiline(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%( ',
             '   spam = eggs ',
             'herp="derp"',
@@ -87,7 +84,7 @@ class TestTagAttributes(PyhaaTestCase):
 
     def test_python_attributes(self):
         # Even dirtier
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%{"sup":"nah"}{"at"+"tribute": ("value"*2).upper()}',
         )).tree
         tag, = tree.children
@@ -98,7 +95,7 @@ class TestTagAttributes(PyhaaTestCase):
 
     def test_python_attributes_multiline(self):
         # Even dirtier
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%{',
             '\t    "sup":  "nah"',
             ' } %{',
@@ -117,7 +114,7 @@ class TestTagAttributes(PyhaaTestCase):
         })
     
     def test_for_stupid_readahead(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%{}',
             '%()',
             '%{ \t }',
@@ -131,7 +128,7 @@ class TestTagAttributes(PyhaaTestCase):
         self.assertEqual(len(tree.children), 9)
 
     def test_entity_decode(self):
-        tree = parse_string(jl(
+        tree = self.senv.parse_string(jl(
             '%&Aacute;.&Aacute;#&Aacute;(&Aacute;="&quot;&apos;&Aacute;")',
         )).tree
         tag1, = tree

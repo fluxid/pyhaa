@@ -24,8 +24,8 @@ from ..utils.cgrt_common import (
     prepare_for_tag,
 )
 
-def _ph_open_tag(tag_name_stack, name, id_, classes, attributes, self_close):
-    name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, self.encoding)
+def _ph_open_tag(tag_name_stack, name, id_, classes, attributes, self_close, encoding):
+    name, attributes = prepare_for_tag(name, id_, classes, attributes, True, True, encoding)
     if not self_close:
         tag_name_stack.append(name)
     return open_tag(name, attributes, self_close)
