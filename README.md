@@ -47,6 +47,7 @@ TODO
 
 Things I left behind for later, not those "yet to be touched".
 
+1. Store encoding in cached template and invalidate if encoding does not match
 1. Clean up API, make it more flexible and less messy
 1. Raise proper exceptions (move parsing.errors up one level and refactor)
 1. Think of optimizations and code reorganization for get_inheritance_chain
