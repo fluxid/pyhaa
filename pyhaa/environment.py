@@ -36,6 +36,7 @@ class PyhaaEnvironment:
         codegen_class=None,
         output_encoding='utf-8',
         auto_reload = True,
+        template_globals = None,
     ):
         if not parser_class:
             from .parsing.parser import PyhaaParser
@@ -50,6 +51,7 @@ class PyhaaEnvironment:
         self.codegen_class = codegen_class
         self.output_encoding = output_encoding
         self.auto_reload = auto_reload
+        self.template_globals = template_globals or dict()
 
     def get_template_info(self, path, current_path=None):
         if current_path and not path.startswith('/'):
@@ -208,7 +210,10 @@ class PyhaaEnvironment:
         return bio.getvalue()
 
     def template_info_from_bytecode(self, bytecode):
-        dict_ = dict()
-        exec(bytecode, dict_, dict_)
-        return dict_['_ph_template_info']
+        globals_ = dict(
+            self.template_globals,
+            environment = self,
+        )
+        exec(bytecode, globals_)
+        return globals_['_ph_template_info']
 
