@@ -8,10 +8,12 @@ if sys.version_info < (3,):
 setup(
     name = 'pyhaa',
     version = '0.0',
-    packages = ['pyhaa'],
+    packages = find_packages(exclude=['tests']),
     author = 'Tomasz Kowalczyk',
-    author_email = 'myself@fluxid.pl',
-    description = 'Standalone templating system based on ideas taken from HAML and Mako',
+    author_email = 'code@fluxid.pl',
+    description = 'Standalone templating system inspired by HAML',
     keywords = 'haml templating',
+    tests_require = ['nose'],
+    test_suite = 'nose.collector',
 )
 
