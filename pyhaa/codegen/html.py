@@ -34,6 +34,7 @@ log = logging.getLogger(__name__)
 
 class HTMLCodeGen(CodeGen):
     imports = CodeGen.imports + (
+        'from pyhaa.utils.encode import single_encode as _ph_single_encode',
         'from pyhaa.runtime.html import _ph_open_tag, _ph_close_tag',
     )
     void_tags = set((
@@ -181,7 +182,7 @@ class HTMLCodeGen(CodeGen):
 
     def handle_open_expression(self, node):
         self.write_io(
-            'yield _ph_single_encode(({}), True, {}, self.encoding)'.format(
+            'yield _ph_single_encode(({}), True, {}, self.encoding, True, True)'.format(
                 node.content,
                 repr(node.escape),
             ),

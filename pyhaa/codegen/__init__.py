@@ -44,7 +44,6 @@ def or_if_none(value, replacement):
 
 class CodeGen:
     imports = (
-        'from pyhaa.utils.encode import single_encode as _ph_single_encode',
         'from pyhaa.runtime import encapsulate_exceptions as _ph_encapsulate_exceptions, TemplateInfo as _ph_TemplateInfo',
     )
 

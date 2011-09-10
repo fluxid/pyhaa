@@ -26,13 +26,10 @@ from .parsing.parser import PyhaaParser
 from .runtime import decapsulate_exceptions, EncapsulatedException
 from .utils import iter_flatten
 
-# TODO Scrap all of below and enforce usage of environment!
-
 __all__ = (
     'html_render_to_iterator',
     'html_render_to_string',
 )
-
 
 def html_render_to_iterator(template, function_name=None, args=None, kwargs=None):
     args = args or list()
@@ -40,8 +37,7 @@ def html_render_to_iterator(template, function_name=None, args=None, kwargs=None
     function = template
     if function_name:
         function = getattr(template, function_name)
-    iterator = function(*args, **kwargs)
-    return iter_flatten(iterator)
+    return iter_flatten(function(*args, **kwargs))
 
 def html_render_to_string(template, *args, **kwargs):
     with decapsulate_exceptions():

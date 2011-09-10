@@ -45,3 +45,86 @@ class TestUtilsEncode(PyhaaTestCase):
             chr(193) * 6,
         )
 
+    def test_recursive_encode(self):
+        self.assertEqual(
+            encode.recursive_encode(('<aaa>', b'<bbb>', None, 12, ['ccc'], {'ddd'}, {'eee':'fff'})),
+            (b'<aaa>', b'<bbb>', None, 12, [b'ccc'], {b'ddd'}, {b'eee':b'fff'})
+        )
+        self.assertEqual(
+            encode.recursive_encode(('<aaa>', b'<bbb>', None, 12, ['ccc'], {'ddd'}, {'eee':'fff'}), False),
+            ('<aaa>', b'<bbb>', None, 12, ['ccc'], {'ddd'}, {'eee':'fff'})
+        )
+        self.assertEqual(
+            encode.recursive_encode(('<aaa>', b'<bbb>', None, 12, ['ccc'], {'ddd'}, {'eee':'fff'}), False, True),
+            ('&lt;aaa&gt;', b'<bbb>', None, 12, ['ccc'], {'ddd'}, {'eee':'fff'})
+        )
+        self.assertEqual(
+            encode.recursive_encode(('<aaa>', b'<bbb>', None, 12, ['ccc'], {'ddd'}, {'eee':'fff'}), True, True),
+            (b'&lt;aaa&gt;', b'<bbb>', None, 12, [b'ccc'], {b'ddd'}, {b'eee':b'fff'})
+        )
+
+    def test_single_encode(self):
+        self.assertEqual(
+            encode.single_encode(None),
+            None,
+        )
+        self.assertEqual(
+            encode.single_encode(12),
+            12,
+        )
+        self.assertEqual(
+            encode.single_encode('abc'),
+            b'abc',
+        )
+        self.assertEqual(
+            encode.single_encode('abc', False),
+            'abc',
+        )
+        self.assertEqual(
+            encode.single_encode('<abc>', False, True),
+            '&lt;abc&gt;',
+        )
+        self.assertEqual(
+            encode.single_encode('<abc>', True, True),
+            b'&lt;abc&gt;',
+        )
+        self.assertEqual(
+            encode.single_encode('zażółć', encoding='iso-8859-2'),
+            'zażółć'.encode('iso-8859-2'),
+        )
+        self.assertEqual(
+            encode.single_encode('zażółć', encoding='utf8'),
+            'zażółć'.encode('utf8'),
+        )
+        self.assertEqual(
+            encode.single_encode(None, stringify=True),
+            b'None',
+        )
+        self.assertEqual(
+            encode.single_encode(12, stringify=True),
+            b'12',
+        )
+        self.assertEqual(
+            encode.single_encode(b'<abc>', True, True, stringify=True),
+            b'<abc>',
+        )
+
+    def test_single_encode_generators(self):
+        def gen1():
+            yield b'hurr<>durr'
+        def gen2():
+            yield 12
+            yield '<abc>'
+            yield gen1()
+
+        self.assertTrue(isinstance(
+            encode.single_encode(gen2(), True, True, allow_generators=False, stringify=True),
+            bytes
+        ))
+        self.assertSequenceEqual(
+            list(encode.single_encode(gen2(), True, True, allow_generators=True, stringify=True)),
+            [b'12', b'&lt;abc&gt;', b'hurr<>durr'],
+        )
+
+
+

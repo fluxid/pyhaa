@@ -20,7 +20,10 @@
 
 import re
 
-from . import dict_sub
+from . import (
+    dict_sub,
+    iter_flatten,
+)
 
 # TODO List all entities here
 ENTITIES_DECODE = {
@@ -323,12 +326,27 @@ def _entity_decode(match):
 def entity_decode(value):
     return RE_ENTITIES_DECODE.sub(_entity_decode, value)
 
-def single_encode(value, do_byte_encode = True, do_entity_encode = False, encoding = 'utf-8'):
-    if isinstance(value, str):
-        if do_entity_encode:
-            value = entity_encode(value)
-        if do_byte_encode:
-            value = value.encode(encoding, encoding)
+def generator_encode(value, do_byte_encode = True, do_entity_encode = False, encoding = 'utf-8', stringify = False):
+    for sub_value in iter_flatten(value):
+        yield single_encode(sub_value, do_byte_encode, do_entity_encode, encoding, False, stringify)
+
+def single_encode(value, do_byte_encode = True, do_entity_encode = False, encoding = 'utf-8', allow_generators = False, stringify = False):
+    if isinstance(value, bytes):
+        return value
+
+    if not isinstance(value, str):
+        if allow_generators and hasattr(value, '__next__'):
+            return generator_encode(value, do_byte_encode, do_entity_encode, encoding, stringify)
+
+        if not stringify:
+            return value
+
+        value = str(value)
+
+    if do_entity_encode:
+        value = entity_encode(value)
+    if do_byte_encode:
+        value = value.encode(encoding, encoding)
     return value
 
 def recursive_encode(value, do_byte_encode = True, do_entity_encode = False, encoding = 'utf-8'):
@@ -338,18 +356,21 @@ def recursive_encode(value, do_byte_encode = True, do_entity_encode = False, enc
 
     if isinstance(value, dict):
         return {
-            single_encode(key): recursive_encode(value, do_byte_encode, do_entity_encode, encoding)
+            single_encode(key, do_byte_encode, do_entity_encode, encoding):
+            recursive_encode(value, do_byte_encode, do_entity_encode, encoding)
             for key, value in value.items()
         }
 
     type_ = None
     if isinstance(value, set):
         type_ = set
-    elif isinstance(value, (list, tuple)):
+    elif isinstance(value, list):
         type_ = list
+    elif isinstance(value, tuple):
+        type_ = tuple
 
     if not type_:
-        return single_encode(value, do_byte_encode, do_entity_encode, encoding)
+        return single_encode(value, do_byte_encode, do_entity_encode, encoding, False, False)
     
     return type_((
         recursive_encode(item, do_byte_encode, do_entity_encode, encoding)
